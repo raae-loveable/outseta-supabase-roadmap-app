@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { openOutsetaSignIn, openOutsetaSignUp, getCurrentUser } from '@/utils/outseta';
+import { openOutsetaSignIn, openOutsetaSignUp, getCurrentUser, logoutUser } from '@/utils/outseta';
 import { Button } from '@/components/ui/button';
-import { LogIn, Menu, UserPlus } from 'lucide-react';
+import { LogIn, LogOut, Menu, User, UserPlus } from 'lucide-react';
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {}
 
@@ -30,6 +30,11 @@ export function Header({ className, ...props }: HeaderProps) {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    setIsLoggedIn(false);
   };
 
   return (
@@ -72,11 +77,23 @@ export function Header({ className, ...props }: HeaderProps) {
           </a>
           
           {isLoggedIn ? (
-            <div 
-              data-outseta-button-type="profile" 
-              className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all cursor-pointer"
-            >
-              My Account
+            <div className="flex items-center gap-2">
+              <div 
+                data-outseta-button-type="profile" 
+                className="flex items-center gap-1 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all cursor-pointer"
+              >
+                <User className="w-4 h-4" />
+                Profile
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleLogout}
+                className="flex items-center gap-1"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </Button>
             </div>
           ) : (
             <>
@@ -121,11 +138,22 @@ export function Header({ className, ...props }: HeaderProps) {
             </a>
             
             {isLoggedIn ? (
-              <div 
-                data-outseta-button-type="profile" 
-                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all w-full text-center cursor-pointer"
-              >
-                My Account
+              <div className="flex flex-col space-y-2">
+                <div 
+                  data-outseta-button-type="profile" 
+                  className="flex items-center justify-center gap-1 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all w-full cursor-pointer"
+                >
+                  <User className="w-4 h-4" />
+                  Profile
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleLogout}
+                  className="flex items-center justify-center gap-1 w-full"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </Button>
               </div>
             ) : (
               <div className="flex flex-col space-y-2">

@@ -9,6 +9,7 @@ declare global {
       auth: {
         open: (options: { widgetMode: string }) => void;
       };
+      logout: () => void;
     };
     OutsetaEventRegister?: any;
   }
@@ -54,6 +55,17 @@ export const getAccessToken = async (): Promise<string | null> => {
     }
   }
   return null;
+};
+
+export const logoutUser = () => {
+  if (window.Outseta) {
+    window.Outseta.logout();
+    // Dispatch a custom event that our app is listening for
+    const event = new CustomEvent('outseta:auth:updated', { detail: null });
+    window.dispatchEvent(event);
+  } else {
+    console.error("Outseta is not available");
+  }
 };
 
 // Register custom event handlers
