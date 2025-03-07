@@ -53,8 +53,14 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
                 : "hover:bg-primary/10 text-primary/70"
             )}
             aria-label={hasVoted ? "Remove vote" : "Vote for this feature"}
+            title={hasVoted ? "Remove vote" : "Vote for this feature"}
           >
-            <ThumbsUp className="w-5 h-5" />
+            <ThumbsUp 
+              className={cn(
+                "w-5 h-5",
+                hasVoted && "fill-primary"
+              )} 
+            />
           </button>
           
           <span className="font-semibold text-sm">{feature.votes}</span>
