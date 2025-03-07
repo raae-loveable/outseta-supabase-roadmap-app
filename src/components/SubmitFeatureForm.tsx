@@ -6,10 +6,11 @@ import { Lightbulb } from 'lucide-react';
 
 interface SubmitFeatureFormProps {
   onSubmit: (input: FeatureRequestInput) => void;
+  isLoggedIn?: boolean;
   className?: string;
 }
 
-export function SubmitFeatureForm({ onSubmit, className }: SubmitFeatureFormProps) {
+export function SubmitFeatureForm({ onSubmit, isLoggedIn, className }: SubmitFeatureFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

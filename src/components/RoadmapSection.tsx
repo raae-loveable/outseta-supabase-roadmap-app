@@ -8,11 +8,12 @@ import { Check, Clock, ArrowDown01, ArrowDownUp } from 'lucide-react';
 interface RoadmapSectionProps {
   features: Feature[];
   featureCounts: Record<FeatureStatus, number>;
-  onVote: (id: string, increment: boolean) => void;
+  onVote: (id: string) => void;
   filterStatus: FeatureStatus | 'all';
   setFilterStatus: (status: FeatureStatus | 'all') => void;
   sortBy: 'votes' | 'newest';
   setSortBy: (sort: 'votes' | 'newest') => void;
+  isLoggedIn?: boolean;
   className?: string;
 }
 
@@ -24,6 +25,7 @@ export function RoadmapSection({
   setFilterStatus,
   sortBy,
   setSortBy,
+  isLoggedIn,
   className 
 }: RoadmapSectionProps) {
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
@@ -183,7 +185,7 @@ export function RoadmapSection({
               >
                 <FeatureCard
                   feature={feature}
-                  onVote={onVote}
+                  onVote={() => onVote(feature.id)}
                 />
               </div>
             ))}

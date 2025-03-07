@@ -8,6 +8,7 @@ declare global {
         open: (options: { widgetMode: string }) => void;
       };
     };
+    OutsetaEventRegister?: any;
   }
 }
 
@@ -38,4 +39,17 @@ export const getCurrentUser = async () => {
     }
   }
   return null;
+};
+
+// Register custom event handlers
+export const registerOutsetaEvents = () => {
+  if (window.OutsetaEventRegister) {
+    // Auth:updated event
+    window.OutsetaEventRegister("auth:updated", function(auth: any) {
+      console.log("Outseta auth updated", auth);
+      // Dispatch a custom event that our app is listening for
+      const event = new CustomEvent('outseta:auth:updated', { detail: auth });
+      window.dispatchEvent(event);
+    });
+  }
 };

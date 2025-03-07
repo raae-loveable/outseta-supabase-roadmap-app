@@ -94,7 +94,7 @@ const Index = () => {
       return;
     }
     
-    updateVotes(featureId);
+    updateVotes(featureId, true);
   };
 
   return (
