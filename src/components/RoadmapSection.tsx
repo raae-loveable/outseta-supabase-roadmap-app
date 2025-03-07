@@ -15,6 +15,7 @@ interface RoadmapSectionProps {
   sortBy: 'votes' | 'newest';
   setSortBy: (sort: 'votes' | 'newest') => void;
   isLoggedIn?: boolean;
+  userId?: string; // Add userId prop
   className?: string;
 }
 
@@ -27,6 +28,7 @@ export function RoadmapSection({
   sortBy,
   setSortBy,
   isLoggedIn,
+  userId, // Add userId to props
   className 
 }: RoadmapSectionProps) {
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
@@ -68,7 +70,7 @@ export function RoadmapSection({
           </div>
         </div>
         
-        <FeatureGrid features={features} onVote={onVote} />
+        <FeatureGrid features={features} onVote={onVote} userId={userId} />
       </div>
     </section>
   );

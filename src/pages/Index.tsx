@@ -167,6 +167,7 @@ const Index = () => {
           sortBy={sortBy}
           setSortBy={setSortBy}
           isLoggedIn={isLoggedIn}
+          userId={userId} // Pass userId to RoadmapSection
         />
         
         <SubmitFeatureForm onSubmit={handleFeatureSubmit} isLoggedIn={isLoggedIn} />

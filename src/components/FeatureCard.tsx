@@ -2,15 +2,16 @@
 import React from 'react';
 import { Feature } from '@/utils/types';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Clock, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { CheckCircle2, Clock, ThumbsUp } from 'lucide-react';
 
 interface FeatureCardProps {
   feature: Feature;
   onVote: (id: string, increment: boolean) => void;
   className?: string;
+  userId?: string;
 }
 
-export function FeatureCard({ feature, onVote, className }: FeatureCardProps) {
+export function FeatureCard({ feature, onVote, className, userId }: FeatureCardProps) {
   // Status badge config
   const statusConfig = {
     'planned': { color: 'bg-blue-100 text-blue-800', icon: Clock },
@@ -20,6 +21,9 @@ export function FeatureCard({ feature, onVote, className }: FeatureCardProps) {
   
   const statusColor = statusConfig[feature.status].color;
   const StatusIcon = statusConfig[feature.status].icon;
+  
+  // Check if the current user has voted on this feature
+  const hasVoted = userId ? feature.votedBy.has(userId) : false;
   
   return (
     <div 
@@ -42,22 +46,18 @@ export function FeatureCard({ feature, onVote, className }: FeatureCardProps) {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => onVote(feature.id, true)}
-            className="p-2 rounded-full hover:bg-primary/10 transition-colors"
-            aria-label="Upvote"
+            className={cn(
+              "p-2 rounded-full transition-colors",
+              hasVoted 
+                ? "bg-primary/20 text-primary" 
+                : "hover:bg-primary/10 text-primary/70"
+            )}
+            aria-label={hasVoted ? "Remove vote" : "Vote for this feature"}
           >
-            <ArrowUpCircle className="w-5 h-5 text-primary" />
+            <ThumbsUp className="w-5 h-5" />
           </button>
           
           <span className="font-semibold text-sm">{feature.votes}</span>
-          
-          <button 
-            onClick={() => onVote(feature.id, false)}
-            className="p-2 rounded-full hover:bg-primary/10 transition-colors"
-            aria-label="Downvote"
-            disabled={feature.votes <= 0}
-          >
-            <ArrowDownCircle className="w-5 h-5 text-primary/70" />
-          </button>
         </div>
         
         <span className="text-xs text-foreground/60">
