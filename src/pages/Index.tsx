@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
@@ -22,20 +23,35 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Check for window.outseta before using it
-    if (typeof window !== 'undefined' && window.outseta) {
+    // Check for window.Outseta before using it
+    if (typeof window !== 'undefined' && window.Outseta) {
       // Add event listener for Outseta auth changes
-      window.outseta.on('accessToken.set', (decodedToken) => {
+      window.Outseta.on('accessToken.set', (decodedToken) => {
         setIsLoggedIn(Boolean(decodedToken));
         toast({
           title: "Authentication status updated",
           description: "Your login status has been updated.",
         });
       });
+      
+      // Check current authentication status on load
+      checkAuthStatus();
     } else {
       console.warn('Outseta is not initialized yet. Authentication features may not work properly.');
     }
   }, []);
+  
+  const checkAuthStatus = async () => {
+    try {
+      if (window.Outseta) {
+        const accessToken = await window.Outseta.getAccessToken();
+        setIsLoggedIn(Boolean(accessToken));
+      }
+    } catch (error) {
+      console.error("Error checking authentication status:", error);
+      setIsLoggedIn(false);
+    }
+  };
 
   useEffect(() => {
     // Observer for the animation of elements as they appear in the viewport
@@ -76,17 +92,29 @@ const Index = () => {
     addFeature(data);
   };
 
-  const handleVote = (featureId: string) => {
-    if (!isLoggedIn) {
+  const handleVote = async (featureId: string) => {
+    // Double-check authentication status before allowing vote
+    if (window.Outseta) {
+      const accessToken = await window.Outseta.getAccessToken();
+      
+      if (!accessToken) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to vote for features.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // User is confirmed to be logged in, proceed with vote
+      updateVotes(featureId, true);
+    } else {
       toast({
-        title: "Authentication required",
-        description: "Please sign in to vote for features.",
+        title: "Authentication error",
+        description: "Unable to verify authentication. Please try again later.",
         variant: "destructive",
       });
-      return;
     }
-    
-    updateVotes(featureId, true);
   };
 
   return (

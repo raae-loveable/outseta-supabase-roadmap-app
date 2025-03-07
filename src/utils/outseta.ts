@@ -4,6 +4,8 @@ declare global {
   interface Window {
     Outseta?: {
       getUser: () => Promise<any>;
+      getAccessToken: () => Promise<string | null>;
+      on: (event: string, callback: (data: any) => void) => void;
       auth: {
         open: (options: { widgetMode: string }) => void;
       };
@@ -35,6 +37,19 @@ export const getCurrentUser = async () => {
       return user;
     } catch (error) {
       console.error("Error getting current user:", error);
+      return null;
+    }
+  }
+  return null;
+};
+
+export const getAccessToken = async (): Promise<string | null> => {
+  if (window.Outseta) {
+    try {
+      const token = await window.Outseta.getAccessToken();
+      return token;
+    } catch (error) {
+      console.error("Error getting access token:", error);
       return null;
     }
   }
