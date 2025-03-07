@@ -4,6 +4,41 @@ import { Feature, FeatureRequestInput, FeatureStatus } from '../utils/types';
 import { initialFeatures } from '../utils/data';
 import { toast } from '@/components/ui/use-toast';
 
+// Helper function to filter features by status
+const filterFeaturesByStatus = (features: Feature[], filterStatus: FeatureStatus | 'all') => {
+  if (filterStatus === 'all') return features;
+  return features.filter(feature => feature.status === filterStatus);
+};
+
+// Helper function to sort features by votes or date
+const sortFeatures = (features: Feature[], sortBy: 'votes' | 'newest') => {
+  if (sortBy === 'votes') {
+    return [...features].sort((a, b) => b.votes - a.votes);
+  } else {
+    return [...features].sort((a, b) => {
+      // Ensure we're comparing Date objects
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
+  }
+};
+
+// Helper function to calculate counts by status
+const calculateFeatureCounts = (features: Feature[]): Record<FeatureStatus, number> => {
+  const counts: Record<FeatureStatus, number> = {
+    'planned': 0,
+    'in-progress': 0,
+    'completed': 0
+  };
+  
+  features.forEach(feature => {
+    counts[feature.status] = (counts[feature.status] || 0) + 1;
+  });
+  
+  return counts;
+};
+
 export function useFeatures() {
   const [features, setFeatures] = useState<Feature[]>(initialFeatures);
   const [filterStatus, setFilterStatus] = useState<FeatureStatus | 'all'>('all');
@@ -48,43 +83,15 @@ export function useFeatures() {
     );
   }, []);
 
-  // Filter and sort features
+  // Apply filtering and sorting
   const filteredAndSortedFeatures = useMemo(() => {
-    let result = [...features];
-    
-    // Apply status filter
-    if (filterStatus !== 'all') {
-      result = result.filter(feature => feature.status === filterStatus);
-    }
-    
-    // Apply sorting
-    if (sortBy === 'votes') {
-      result.sort((a, b) => b.votes - a.votes);
-    } else {
-      result.sort((a, b) => {
-        // Ensure we're comparing Date objects
-        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-        return dateB.getTime() - dateA.getTime();
-      });
-    }
-    
-    return result;
+    const filtered = filterFeaturesByStatus(features, filterStatus);
+    return sortFeatures(filtered, sortBy);
   }, [features, filterStatus, sortBy]);
 
   // Get counts by status
   const featureCounts = useMemo(() => {
-    const counts: Partial<Record<FeatureStatus, number>> = {
-      'planned': 0,
-      'in-progress': 0,
-      'completed': 0
-    };
-    
-    features.forEach(feature => {
-      counts[feature.status] = (counts[feature.status] || 0) + 1;
-    });
-    
-    return counts as Record<FeatureStatus, number>;
+    return calculateFeatureCounts(features);
   }, [features]);
 
   return {
