@@ -23,26 +23,14 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
-    const checkAuthStatus = async () => {
-      const user = await getCurrentUser();
-      setIsLoggedIn(!!user);
-    };
-
-    checkAuthStatus();
-
     // Add event listener for Outseta auth changes
-    window.addEventListener('outseta:auth:updated', () => {
-      checkAuthStatus();
+    window.outseta.on('accessToken.set', (decodedToken) => {
+      setIsLoggedIn(Boolean(decodedToken))
       toast({
         title: "Authentication status updated",
         description: "Your login status has been updated.",
       });
     });
-    
-    return () => {
-      window.removeEventListener('outseta:auth:updated', checkAuthStatus);
-    };
   }, []);
 
   useEffect(() => {
