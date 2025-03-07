@@ -1,32 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { openOutsetaSignIn, openOutsetaSignUp, getCurrentUser, logoutUser } from '@/utils/outseta';
+import { openOutsetaSignIn, openOutsetaSignUp, logoutUser } from '@/utils/outseta';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Menu, User, UserPlus } from 'lucide-react';
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {}
 
 export function Header({ className, ...props }: HeaderProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    // Check if user is logged in
-    const checkAuthStatus = async () => {
-      const user = await getCurrentUser();
-      setIsLoggedIn(!!user);
-    };
-
-    checkAuthStatus();
-
-    // Add event listener for Outseta auth changes
-    window.addEventListener('outseta:auth:updated', checkAuthStatus);
-    
-    return () => {
-      window.removeEventListener('outseta:auth:updated', checkAuthStatus);
-    };
-  }, []);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -34,7 +16,6 @@ export function Header({ className, ...props }: HeaderProps) {
 
   const handleLogout = () => {
     logoutUser();
-    setIsLoggedIn(false);
   };
 
   return (
@@ -76,7 +57,7 @@ export function Header({ className, ...props }: HeaderProps) {
             Submit Idea
           </a>
           
-          {isLoggedIn ? (
+          <div data-o-authenticated>
             <div className="flex items-center gap-2">
               <button 
                 data-o-profile="1" 
@@ -96,27 +77,27 @@ export function Header({ className, ...props }: HeaderProps) {
                 Logout
               </Button>
             </div>
-          ) : (
-            <>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={openOutsetaSignIn}
-                className="flex items-center gap-1"
-              >
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </Button>
-              <Button 
-                onClick={openOutsetaSignUp}
-                className="flex items-center gap-1"
-                size="sm"
-              >
-                <UserPlus className="w-4 h-4" />
-                Sign Up
-              </Button>
-            </>
-          )}
+          </div>
+          
+          <div data-o-anonymous>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={openOutsetaSignIn}
+              className="flex items-center gap-1"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </Button>
+            <Button 
+              onClick={openOutsetaSignUp}
+              className="flex items-center gap-1"
+              size="sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              Sign Up
+            </Button>
+          </div>
         </nav>
         
         <button 
@@ -138,7 +119,7 @@ export function Header({ className, ...props }: HeaderProps) {
               Submit Idea
             </a>
             
-            {isLoggedIn ? (
+            <div data-o-authenticated>
               <div className="flex flex-col space-y-2">
                 <button 
                   data-o-profile="1" 
@@ -157,7 +138,9 @@ export function Header({ className, ...props }: HeaderProps) {
                   Logout
                 </Button>
               </div>
-            ) : (
+            </div>
+            
+            <div data-o-anonymous>
               <div className="flex flex-col space-y-2">
                 <Button 
                   variant="outline" 
@@ -175,7 +158,7 @@ export function Header({ className, ...props }: HeaderProps) {
                   Sign Up
                 </Button>
               </div>
-            )}
+            </div>
           </nav>
         </div>
       )}
