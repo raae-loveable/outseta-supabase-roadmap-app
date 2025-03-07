@@ -1,10 +1,37 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { openOutsetaSignIn, openOutsetaSignUp, getCurrentUser } from '@/utils/outseta';
+import { Button } from '@/components/ui/button';
+import { LogIn, Menu, UserPlus } from 'lucide-react';
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {}
 
 export function Header({ className, ...props }: HeaderProps) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuthStatus = async () => {
+      const user = await getCurrentUser();
+      setIsLoggedIn(!!user);
+    };
+
+    checkAuthStatus();
+
+    // Add event listener for Outseta auth changes
+    window.addEventListener('outseta:auth:updated', checkAuthStatus);
+    
+    return () => {
+      window.removeEventListener('outseta:auth:updated', checkAuthStatus);
+    };
+  }, []);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
     <header
       className={cn(
@@ -43,26 +70,85 @@ export function Header({ className, ...props }: HeaderProps) {
           <a href="#submit" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Submit Idea
           </a>
-          <a 
-            href="#" 
-            className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all"
-          >
-            Sign In
-          </a>
+          
+          {isLoggedIn ? (
+            <div 
+              data-outseta-button-type="profile" 
+              className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all cursor-pointer"
+            >
+              My Account
+            </div>
+          ) : (
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={openOutsetaSignIn}
+                className="flex items-center gap-1"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Button>
+              <Button 
+                onClick={openOutsetaSignUp}
+                className="flex items-center gap-1"
+                size="sm"
+              >
+                <UserPlus className="w-4 h-4" />
+                Sign Up
+              </Button>
+            </>
+          )}
         </nav>
         
-        <button className="block md:hidden p-2 rounded-md hover:bg-accent transition-colors">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor" 
-            className="w-5 h-5"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+        <button 
+          className="block md:hidden p-2 rounded-md hover:bg-accent transition-colors"
+          onClick={toggleMobileMenu}
+        >
+          <Menu className="w-5 h-5" />
         </button>
       </div>
+      
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden py-4 px-4 bg-background/95 backdrop-blur-sm border-b border-border/30 animate-slide-down">
+          <nav className="flex flex-col space-y-4">
+            <a href="#features" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+              Features
+            </a>
+            <a href="#submit" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+              Submit Idea
+            </a>
+            
+            {isLoggedIn ? (
+              <div 
+                data-outseta-button-type="profile" 
+                className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all w-full text-center cursor-pointer"
+              >
+                My Account
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-2">
+                <Button 
+                  variant="outline" 
+                  onClick={openOutsetaSignIn}
+                  className="flex items-center justify-center gap-1 w-full"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Button>
+                <Button 
+                  onClick={openOutsetaSignUp}
+                  className="flex items-center justify-center gap-1 w-full"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Sign Up
+                </Button>
+              </div>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

@@ -1,10 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { RoadmapSection } from '@/components/RoadmapSection';
 import { SubmitFeatureForm } from '@/components/SubmitFeatureForm';
 import { useFeatures } from '@/hooks/useFeatures';
+import { getCurrentUser } from '@/utils/outseta';
+import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
   const {
@@ -17,6 +19,31 @@ const Index = () => {
     sortBy,
     setSortBy,
   } = useFeatures();
+  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const checkAuthStatus = async () => {
+      const user = await getCurrentUser();
+      setIsLoggedIn(!!user);
+    };
+
+    checkAuthStatus();
+
+    // Add event listener for Outseta auth changes
+    window.addEventListener('outseta:auth:updated', () => {
+      checkAuthStatus();
+      toast({
+        title: "Authentication status updated",
+        description: "Your login status has been updated.",
+      });
+    });
+    
+    return () => {
+      window.removeEventListener('outseta:auth:updated', checkAuthStatus);
+    };
+  }, []);
 
   useEffect(() => {
     // Observer for the animation of elements as they appear in the viewport
@@ -44,6 +71,32 @@ const Index = () => {
     };
   }, []);
 
+  const handleFeatureSubmit = (data: any) => {
+    if (!isLoggedIn) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to submit a feature request.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    addFeature(data);
+  };
+
+  const handleVote = (featureId: string) => {
+    if (!isLoggedIn) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to vote for features.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    updateVotes(featureId);
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -54,14 +107,15 @@ const Index = () => {
         <RoadmapSection
           features={features}
           featureCounts={featureCounts}
-          onVote={updateVotes}
+          onVote={handleVote}
           filterStatus={filterStatus}
           setFilterStatus={setFilterStatus}
           sortBy={sortBy}
           setSortBy={setSortBy}
+          isLoggedIn={isLoggedIn}
         />
         
-        <SubmitFeatureForm onSubmit={addFeature} />
+        <SubmitFeatureForm onSubmit={handleFeatureSubmit} isLoggedIn={isLoggedIn} />
       </main>
       
       <footer className="py-8 px-4 text-center text-sm text-foreground/60">

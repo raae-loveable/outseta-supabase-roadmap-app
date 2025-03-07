@@ -15,3 +15,11 @@ export interface FeatureRequestInput {
   title: string;
   description: string;
 }
+
+export interface OutsetaUser {
+  uid: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+}
