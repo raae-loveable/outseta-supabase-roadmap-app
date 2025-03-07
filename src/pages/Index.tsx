@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
@@ -23,14 +22,19 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    // Add event listener for Outseta auth changes
-    window.outseta.on('accessToken.set', (decodedToken) => {
-      setIsLoggedIn(Boolean(decodedToken))
-      toast({
-        title: "Authentication status updated",
-        description: "Your login status has been updated.",
+    // Check for window.outseta before using it
+    if (typeof window !== 'undefined' && window.outseta) {
+      // Add event listener for Outseta auth changes
+      window.outseta.on('accessToken.set', (decodedToken) => {
+        setIsLoggedIn(Boolean(decodedToken));
+        toast({
+          title: "Authentication status updated",
+          description: "Your login status has been updated.",
+        });
       });
-    });
+    } else {
+      console.warn('Outseta is not initialized yet. Authentication features may not work properly.');
+    }
   }, []);
 
   useEffect(() => {
