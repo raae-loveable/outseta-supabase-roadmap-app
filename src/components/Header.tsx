@@ -79,7 +79,7 @@ export function Header({ className, ...props }: HeaderProps) {
             </div>
           </div>
           
-          <div data-o-anonymous>
+          <div data-o-anonymous className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="sm" 
