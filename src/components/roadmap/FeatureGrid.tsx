@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 interface FeatureGridProps {
   features: Feature[];
   onVote: (id: string, increment: boolean) => void;
+  userId?: string; // Add userId as an optional prop
 }
 
-export function FeatureGrid({ features, onVote }: FeatureGridProps) {
+export function FeatureGrid({ features, onVote, userId }: FeatureGridProps) {
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
   
   useEffect(() => {
@@ -60,6 +61,7 @@ export function FeatureGrid({ features, onVote }: FeatureGridProps) {
           <FeatureCard
             feature={feature}
             onVote={onVote}
+            userId={userId}
           />
         </div>
       ))}
