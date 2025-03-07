@@ -9,12 +9,15 @@
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
     <!-- Outseta Widget -->
-    <script src="https://cdn.outseta.com/outseta.min.js" data-options="{
-      'domain': 'yourcompany.outseta.com', 
-      'monitorAuth': true, 
-      'load': ['auth'],
-      'auth': {'widgetMode': 'profile'}
-    }"></script>
+    <script>
+      const o_options = {
+        domain: 'snippets.outseta.com', 
+        monitorAuth: true, 
+        load: ['auth'],
+        auth: {'widgetMode': 'profile'}
+      };
+    </script>
+    <script src="https://cdn.outseta.com/outseta.min.js" data-options="o_options"></script>
   </head>
 
   <body>
