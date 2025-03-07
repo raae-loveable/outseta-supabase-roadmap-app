@@ -7,6 +7,7 @@ export interface Feature {
   description: string;
   status: FeatureStatus;
   votes: number;
+  votedBy: Set<string>; // Track which users have voted
   createdAt: Date;
   updatedAt: Date;
 }

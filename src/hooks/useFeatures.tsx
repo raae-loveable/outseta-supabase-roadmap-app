@@ -40,7 +40,13 @@ const calculateFeatureCounts = (features: Feature[]): Record<FeatureStatus, numb
 };
 
 export function useFeatures() {
-  const [features, setFeatures] = useState<Feature[]>(initialFeatures);
+  // Initialize votedBy as empty Set for each feature
+  const initialFeaturesWithVotedBy = initialFeatures.map(feature => ({
+    ...feature,
+    votedBy: new Set<string>()
+  }));
+
+  const [features, setFeatures] = useState<Feature[]>(initialFeaturesWithVotedBy);
   const [filterStatus, setFilterStatus] = useState<FeatureStatus | 'all'>('all');
   const [sortBy, setSortBy] = useState<'votes' | 'newest'>('votes');
 
@@ -52,6 +58,7 @@ export function useFeatures() {
       description: input.description,
       status: 'planned',
       votes: 0,
+      votedBy: new Set<string>(),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -66,20 +73,38 @@ export function useFeatures() {
     return newFeature;
   }, []);
 
-  // Update a feature's vote count
-  const updateVotes = useCallback((id: string, increment: boolean) => {
+  // Update a feature's vote count, limiting one vote per user
+  const updateVotes = useCallback((id: string, increment: boolean, userId: string) => {
     setFeatures(prev => 
-      prev.map(feature => 
-        feature.id === id 
-          ? { 
-              ...feature, 
-              votes: increment 
-                ? feature.votes + 1 
-                : Math.max(0, feature.votes - 1),
-              updatedAt: new Date()
-            } 
-          : feature
-      )
+      prev.map(feature => {
+        if (feature.id === id) {
+          const hasVoted = feature.votedBy.has(userId);
+          
+          // User has already voted, show a message
+          if (hasVoted) {
+            toast({
+              title: "Already Voted",
+              description: "You have already voted on this feature.",
+              variant: "destructive",
+            });
+            return feature;
+          }
+          
+          // User hasn't voted, add their vote
+          const newVotedBy = new Set(feature.votedBy);
+          newVotedBy.add(userId);
+          
+          return { 
+            ...feature, 
+            votes: increment 
+              ? feature.votes + 1 
+              : Math.max(0, feature.votes - 1),
+            votedBy: newVotedBy,
+            updatedAt: new Date()
+          };
+        }
+        return feature;
+      })
     );
   }, []);
 

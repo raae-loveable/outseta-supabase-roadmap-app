@@ -21,13 +21,29 @@ const Index = () => {
   } = useFeatures();
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string>('');
 
   useEffect(() => {
     // Check for window.Outseta before using it
     if (typeof window !== 'undefined' && window.Outseta) {
       // Add event listener for Outseta auth changes
-      window.Outseta.on('accessToken.set', (decodedToken) => {
+      window.Outseta.on('accessToken.set', async (decodedToken) => {
         setIsLoggedIn(Boolean(decodedToken));
+        
+        // Get user ID when logged in
+        if (decodedToken) {
+          try {
+            const user = await getCurrentUser();
+            if (user) {
+              setUserId(user.uid);
+            }
+          } catch (error) {
+            console.error("Error fetching user data:", error);
+          }
+        } else {
+          setUserId('');
+        }
+        
         toast({
           title: "Authentication status updated",
           description: "Your login status has been updated.",
@@ -46,6 +62,14 @@ const Index = () => {
       if (window.Outseta) {
         const accessToken = await window.Outseta.getAccessToken();
         setIsLoggedIn(Boolean(accessToken));
+        
+        // Get user ID if logged in
+        if (accessToken) {
+          const user = await getCurrentUser();
+          if (user) {
+            setUserId(user.uid);
+          }
+        }
       }
     } catch (error) {
       console.error("Error checking authentication status:", error);
@@ -106,8 +130,18 @@ const Index = () => {
         return;
       }
       
-      // User is confirmed to be logged in, proceed with vote
-      updateVotes(featureId, increment);
+      // Ensure we have a userId
+      if (!userId) {
+        const user = await getCurrentUser();
+        if (user) {
+          setUserId(user.uid);
+          // User is confirmed to be logged in, proceed with vote
+          updateVotes(featureId, increment, user.uid);
+        }
+      } else {
+        // User is confirmed to be logged in and we have the userId, proceed with vote
+        updateVotes(featureId, increment, userId);
+      }
     } else {
       toast({
         title: "Authentication error",
