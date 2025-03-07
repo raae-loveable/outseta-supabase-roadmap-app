@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { openOutsetaSignIn, openOutsetaSignUp, logoutUser } from '@/utils/outseta';
+import { openOutsetaSignIn, logoutUser } from '@/utils/outseta';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Menu, User, UserPlus } from 'lucide-react';
 
@@ -89,14 +89,15 @@ export function Header({ className, ...props }: HeaderProps) {
               <LogIn className="w-4 h-4" />
               Sign In
             </Button>
-            <Button 
-              onClick={openOutsetaSignUp}
-              className="flex items-center gap-1"
-              size="sm"
+            <button 
+              data-o-auth="1" 
+              data-mode="popup" 
+              data-widget-mode="register"
+              className="flex items-center gap-1 px-4 py-2 rounded-md bg-primary text-primary-foreground h-9 text-sm font-medium hover:bg-primary/90 transition-colors"
             >
               <UserPlus className="w-4 h-4" />
               Sign Up
-            </Button>
+            </button>
           </div>
         </nav>
         
@@ -150,13 +151,15 @@ export function Header({ className, ...props }: HeaderProps) {
                   <LogIn className="w-4 h-4" />
                   Sign In
                 </Button>
-                <Button 
-                  onClick={openOutsetaSignUp}
-                  className="flex items-center justify-center gap-1 w-full"
+                <button 
+                  data-o-auth="1" 
+                  data-mode="popup" 
+                  data-widget-mode="register"
+                  className="flex items-center justify-center gap-1 px-4 py-2 rounded-md bg-primary text-primary-foreground h-9 text-sm font-medium hover:bg-primary/90 transition-colors w-full"
                 >
                   <UserPlus className="w-4 h-4" />
                   Sign Up
-                </Button>
+                </button>
               </div>
             </div>
           </nav>
