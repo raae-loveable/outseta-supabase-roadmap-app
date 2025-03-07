@@ -1,9 +1,10 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Feature, FeatureStatus } from '@/utils/types';
-import { FeatureCard } from './FeatureCard';
 import { cn } from '@/lib/utils';
-import { Check, Clock, ArrowDown01, ArrowDownUp } from 'lucide-react';
+import { StatusFilter } from './roadmap/StatusFilter';
+import { SortControls } from './roadmap/SortControls';
+import { FeatureGrid } from './roadmap/FeatureGrid';
 
 interface RoadmapSectionProps {
   features: Feature[];
@@ -29,32 +30,6 @@ export function RoadmapSection({
   className 
 }: RoadmapSectionProps) {
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
-  
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate');
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        threshold: 0.1,
-      }
-    );
-
-    elementsRef.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => {
-      elementsRef.current.forEach((el) => {
-        if (el) observer.unobserve(el);
-      });
-    };
-  }, []);
 
   return (
     <section
@@ -77,124 +52,23 @@ export function RoadmapSection({
         </div>
         
         <div className="mb-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div 
-            ref={el => elementsRef.current[1] = el}
-            className="flex items-center flex-wrap gap-2 animated-element"
-          >
-            <button
-              onClick={() => setFilterStatus('all')}
-              className={cn(
-                "chip transition-all",
-                filterStatus === 'all' 
-                  ? "bg-foreground text-background" 
-                  : "bg-accent text-foreground/80 hover:bg-accent/80"
-              )}
-            >
-              All
-              <span className="ml-1 opacity-70">
-                ({featureCounts.planned + (featureCounts.completed || 0) + (featureCounts['in-progress'] || 0)})
-              </span>
-            </button>
-            
-            <button
-              onClick={() => setFilterStatus('planned')}
-              className={cn(
-                "chip transition-all flex items-center",
-                filterStatus === 'planned' 
-                  ? "bg-blue-600 text-white" 
-                  : "bg-blue-100 text-blue-800 hover:bg-blue-200"
-              )}
-            >
-              <Clock className="mr-1 w-3 h-3" />
-              Planned
-              <span className="ml-1 opacity-70">({featureCounts.planned || 0})</span>
-            </button>
-            
-            <button
-              onClick={() => setFilterStatus('in-progress')}
-              className={cn(
-                "chip transition-all flex items-center",
-                filterStatus === 'in-progress' 
-                  ? "bg-amber-600 text-white" 
-                  : "bg-amber-100 text-amber-800 hover:bg-amber-200"
-              )}
-            >
-              <Clock className="mr-1 w-3 h-3" />
-              In Progress
-              <span className="ml-1 opacity-70">({featureCounts['in-progress'] || 0})</span>
-            </button>
-            
-            <button
-              onClick={() => setFilterStatus('completed')}
-              className={cn(
-                "chip transition-all flex items-center",
-                filterStatus === 'completed' 
-                  ? "bg-green-600 text-white" 
-                  : "bg-green-100 text-green-800 hover:bg-green-200"
-              )}
-            >
-              <Check className="mr-1 w-3 h-3" />
-              Completed
-              <span className="ml-1 opacity-70">({featureCounts.completed || 0})</span>
-            </button>
+          <div ref={el => elementsRef.current[1] = el}>
+            <StatusFilter 
+              featureCounts={featureCounts} 
+              filterStatus={filterStatus} 
+              setFilterStatus={setFilterStatus} 
+            />
           </div>
           
-          <div 
-            ref={el => elementsRef.current[2] = el}
-            className="flex items-center gap-2 animated-element"
-          >
-            <span className="text-sm text-foreground/70">Sort by:</span>
-            <button
-              onClick={() => setSortBy('votes')}
-              className={cn(
-                "chip flex items-center transition-all",
-                sortBy === 'votes' 
-                  ? "bg-foreground/10 text-foreground" 
-                  : "bg-transparent text-foreground/70 hover:bg-foreground/5"
-              )}
-            >
-              <ArrowDownUp className="mr-1 w-3 h-3" />
-              Votes
-            </button>
-            
-            <button
-              onClick={() => setSortBy('newest')}
-              className={cn(
-                "chip flex items-center transition-all",
-                sortBy === 'newest' 
-                  ? "bg-foreground/10 text-foreground" 
-                  : "bg-transparent text-foreground/70 hover:bg-foreground/5"
-              )}
-            >
-              <ArrowDown01 className="mr-1 w-3 h-3" />
-              Newest
-            </button>
+          <div ref={el => elementsRef.current[2] = el}>
+            <SortControls 
+              sortBy={sortBy} 
+              setSortBy={setSortBy} 
+            />
           </div>
         </div>
         
-        {features.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <div 
-                key={feature.id} 
-                ref={el => elementsRef.current[index + 3] = el}
-                className={cn(
-                  "animated-element",
-                  `animate-delay-${100 * (index % 3)}`
-                )}
-              >
-                <FeatureCard
-                  feature={feature}
-                  onVote={() => onVote(feature.id)}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 bg-foreground/5 rounded-lg">
-            <p className="text-foreground/70">No features match your filter.</p>
-          </div>
-        )}
+        <FeatureGrid features={features} onVote={onVote} />
       </div>
     </section>
   );
