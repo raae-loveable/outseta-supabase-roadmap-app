@@ -6,7 +6,7 @@ import { CheckCircle2, Clock, ArrowUpCircle, ArrowDownCircle } from 'lucide-reac
 
 interface FeatureCardProps {
   feature: Feature;
-  onVote: (id: string) => void;
+  onVote: (id: string, increment: boolean) => void;
   className?: string;
 }
 
@@ -41,7 +41,7 @@ export function FeatureCard({ feature, onVote, className }: FeatureCardProps) {
       <div className="mt-auto flex items-center justify-between pt-3 border-t border-border">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => onVote(feature.id)}
+            onClick={() => onVote(feature.id, true)}
             className="p-2 rounded-full hover:bg-primary/10 transition-colors"
             aria-label="Upvote"
           >
@@ -51,7 +51,7 @@ export function FeatureCard({ feature, onVote, className }: FeatureCardProps) {
           <span className="font-semibold text-sm">{feature.votes}</span>
           
           <button 
-            onClick={() => onVote(feature.id)}
+            onClick={() => onVote(feature.id, false)}
             className="p-2 rounded-full hover:bg-primary/10 transition-colors"
             aria-label="Downvote"
             disabled={feature.votes <= 0}

@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface FeatureGridProps {
   features: Feature[];
-  onVote: (id: string) => void;
+  onVote: (id: string, increment: boolean) => void;
 }
 
 export function FeatureGrid({ features, onVote }: FeatureGridProps) {
@@ -59,7 +59,7 @@ export function FeatureGrid({ features, onVote }: FeatureGridProps) {
         >
           <FeatureCard
             feature={feature}
-            onVote={() => onVote(feature.id)}
+            onVote={onVote}
           />
         </div>
       ))}

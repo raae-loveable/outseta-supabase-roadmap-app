@@ -92,7 +92,7 @@ const Index = () => {
     addFeature(data);
   };
 
-  const handleVote = async (featureId: string) => {
+  const handleVote = async (featureId: string, increment: boolean) => {
     // Double-check authentication status before allowing vote
     if (window.Outseta) {
       const accessToken = await window.Outseta.getAccessToken();
@@ -107,7 +107,7 @@ const Index = () => {
       }
       
       // User is confirmed to be logged in, proceed with vote
-      updateVotes(featureId, true);
+      updateVotes(featureId, increment);
     } else {
       toast({
         title: "Authentication error",

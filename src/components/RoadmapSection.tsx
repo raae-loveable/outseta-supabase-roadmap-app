@@ -9,7 +9,7 @@ import { FeatureGrid } from './roadmap/FeatureGrid';
 interface RoadmapSectionProps {
   features: Feature[];
   featureCounts: Record<FeatureStatus, number>;
-  onVote: (id: string) => void;
+  onVote: (id: string, increment: boolean) => void;
   filterStatus: FeatureStatus | 'all';
   setFilterStatus: (status: FeatureStatus | 'all') => void;
   sortBy: 'votes' | 'newest';
