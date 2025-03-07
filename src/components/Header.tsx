@@ -78,13 +78,14 @@ export function Header({ className, ...props }: HeaderProps) {
           
           {isLoggedIn ? (
             <div className="flex items-center gap-2">
-              <div 
-                data-outseta-button-type="profile" 
+              <button 
+                data-o-profile="1" 
+                data-mode="popup" 
                 className="flex items-center gap-1 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all cursor-pointer"
               >
                 <User className="w-4 h-4" />
                 Profile
-              </div>
+              </button>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -139,13 +140,14 @@ export function Header({ className, ...props }: HeaderProps) {
             
             {isLoggedIn ? (
               <div className="flex flex-col space-y-2">
-                <div 
-                  data-outseta-button-type="profile" 
+                <button 
+                  data-o-profile="1" 
+                  data-mode="popup" 
                   className="flex items-center justify-center gap-1 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium shadow-subtle hover:opacity-90 transition-all w-full cursor-pointer"
                 >
                   <User className="w-4 h-4" />
                   Profile
-                </div>
+                </button>
                 <Button 
                   variant="outline" 
                   onClick={handleLogout}
