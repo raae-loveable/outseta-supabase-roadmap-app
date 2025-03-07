@@ -61,7 +61,12 @@ export function useFeatures() {
     if (sortBy === 'votes') {
       result.sort((a, b) => b.votes - a.votes);
     } else {
-      result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      result.sort((a, b) => {
+        // Ensure we're comparing Date objects
+        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
     }
     
     return result;
@@ -69,10 +74,17 @@ export function useFeatures() {
 
   // Get counts by status
   const featureCounts = useMemo(() => {
-    return features.reduce((acc, feature) => {
-      acc[feature.status] = (acc[feature.status] || 0) + 1;
-      return acc;
-    }, {} as Record<FeatureStatus, number>);
+    const counts: Partial<Record<FeatureStatus, number>> = {
+      'planned': 0,
+      'in-progress': 0,
+      'completed': 0
+    };
+    
+    features.forEach(feature => {
+      counts[feature.status] = (counts[feature.status] || 0) + 1;
+    });
+    
+    return counts as Record<FeatureStatus, number>;
   }, [features]);
 
   return {
