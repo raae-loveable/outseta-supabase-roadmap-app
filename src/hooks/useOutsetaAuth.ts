@@ -1,13 +1,9 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { OutsetaUser } from '@/utils/types';
 import { getAccessToken, getAuthPayload } from '@/utils/outseta';
 import { exchangeOutsetaToken, createSupabaseClientWithToken, clearSupabaseSession } from '@/integrations/supabase/authClient';
 import { getUserFromJWTPayload } from '@/utils/supabase';
-
-// Create a singleton pattern to prevent multiple instances
-let authInstance = null;
-let initializationInProgress = false;
 
 export function useOutsetaAuth() {
   const [user, setUser] = useState<OutsetaUser | null>(null);
@@ -16,9 +12,6 @@ export function useOutsetaAuth() {
   const [supabaseClient, setSupabaseClient] = useState<any>(null);
   const [tokenExchangeError, setTokenExchangeError] = useState<string | null>(null);
   const [jwtPayload, setJwtPayload] = useState<any>(null);
-  
-  // Use a ref to track if this instance has been initialized
-  const initialized = useRef(false);
 
   // Function to directly get the current auth state and exchange tokens
   const refreshAuthState = async () => {
@@ -101,15 +94,6 @@ export function useOutsetaAuth() {
 
   // Initial check when component mounts
   useEffect(() => {
-    // Only initialize once
-    if (initialized.current) {
-      console.log("useOutsetaAuth: Already initialized, skipping");
-      return;
-    }
-
-    // Set this instance as initialized
-    initialized.current = true;
-    
     console.log("useOutsetaAuth: Initializing");
     refreshAuthState();
     
