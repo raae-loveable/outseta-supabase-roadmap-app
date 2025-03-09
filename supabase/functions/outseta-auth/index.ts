@@ -8,11 +8,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// The Outseta JWKS URL
-const JWKS_URL = "https://snippets.outseta.com/.well-known/jwks";
-
+// Handle CORS preflight requests
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log("OPTIONS request");
     return new Response(null, { headers: corsHeaders });
@@ -30,12 +27,12 @@ serve(async (req) => {
       throw new Error('Missing Outseta token');
     }
 
-    console.log('Received Outseta token for exchange');
+    console.log('Received Outseta token for verification');
 
     try {
       // Fetch the JSON Web Key (JWK) set
       const JWKS = jose.createRemoteJWKSet(
-        new URL(JWKS_URL)
+        new URL("https://snippets.outseta.com/.well-known/jwks")
       );
 
       // Use the JSON Web Key (JWK) to verify the token

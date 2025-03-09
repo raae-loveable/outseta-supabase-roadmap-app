@@ -1,170 +1,88 @@
 import { supabase } from '@/integrations/supabase/client';
-import { supabaseAuth } from '@/integrations/supabase/authClient';
-import { Feature, FeatureStatus, FeatureRequestInput } from '@/utils/types';
-import { toast } from '@/components/ui/use-toast';
-
-// Get the appropriate Supabase client based on authentication status
-const getSupabaseClient = () => {
-  // Check if we have a valid session in the auth client
-  if (supabaseAuth.auth.getSession()) {
-    console.log("Using authenticated Supabase client");
-    return supabaseAuth;
-  }
-  
-  // Otherwise, use the default client
-  console.log("Using default Supabase client");
-  return supabase;
-};
+import { Feature, FeatureRequestInput, FeatureStatus } from './types';
+import { getUserProfile, getFeatures, addFeature, updateFeature, voteForFeature } from './supabase-utils';
 
 // Fetch features from Supabase
 export const fetchFeaturesFromSupabase = async (userId?: string) => {
   try {
-    const client = getSupabaseClient();
+    const features = await getFeatures(userId);
     
-    // Get all features
-    const { data: featuresData, error: featuresError } = await client
-      .from('features')
-      .select('*');
-    
-    if (featuresError) throw featuresError;
-    
-    // If user is logged in, get their votes
-    let userVotes: Record<string, boolean> = {};
-    
-    if (userId) {
-      const { data: votesData, error: votesError } = await client
-        .from('feature_votes')
-        .select('feature_id')
-        .eq('user_id', userId);
-      
-      if (!votesError && votesData) {
-        userVotes = votesData.reduce((acc: Record<string, boolean>, vote) => {
-          acc[vote.feature_id] = true;
-          return acc;
-        }, {});
-      }
-    }
-    
-    // Transform the data to match our Feature type
-    const transformedFeatures: Feature[] = featuresData.map(feature => ({
-      id: feature.id,
-      title: feature.title,
-      description: feature.description,
-      status: feature.status as FeatureStatus,
-      votes: feature.votes,
-      votedBy: new Set(userVotes[feature.id] ? [userId || ''] : []),
-      createdAt: new Date(feature.created_at),
-      updatedAt: new Date(feature.updated_at)
-    }));
-    
-    return { features: transformedFeatures, error: null };
+    return {
+      features: features.map(feature => ({
+        ...feature,
+        createdAt: new Date(feature.created_at),
+        updatedAt: new Date(feature.updated_at),
+      })),
+    };
   } catch (error) {
-    console.error('Error fetching features:', error);
-    return { features: [], error };
+    console.error('Error fetching features from Supabase:', error);
+    return { error, features: [] };
   }
 };
 
 // Add a new feature to Supabase
 export const addFeatureToSupabase = async (input: FeatureRequestInput, userId: string) => {
   try {
-    const client = getSupabaseClient();
+    const newFeature = await addFeature(input.title, input.description, userId);
     
-    const { data, error } = await client
-      .from('features')
-      .insert([{
-        title: input.title,
-        description: input.description,
-        status: 'planned',
-        votes: 0
-      }])
-      .select()
-      .single();
+    if (!newFeature) {
+      throw new Error('Failed to create feature');
+    }
     
-    if (error) throw error;
-    
-    const newFeature: Feature = {
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      status: data.status as FeatureStatus,
-      votes: data.votes,
-      votedBy: new Set<string>(),
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at)
+    return {
+      feature: {
+        ...newFeature,
+        createdAt: new Date(newFeature.created_at as string),
+        updatedAt: new Date(newFeature.updated_at as string),
+      },
     };
-    
-    return { feature: newFeature, error: null };
   } catch (error) {
-    console.error('Error adding feature:', error);
-    return { feature: null, error };
+    console.error('Error adding feature to Supabase:', error);
+    return { error };
   }
 };
 
-// Update votes for a feature
+// Update feature status in Supabase
+export const updateFeatureStatusInSupabase = async (id: string, status: FeatureStatus) => {
+  try {
+    const updatedFeature = await updateFeature(id, { status });
+    
+    if (!updatedFeature) {
+      throw new Error('Failed to update feature status');
+    }
+    
+    return {
+      feature: {
+        ...updatedFeature,
+        createdAt: new Date(updatedFeature.created_at as string),
+        updatedAt: new Date(updatedFeature.updated_at as string),
+        votedBy: new Set(), // Placeholder - we don't have vote info here
+      },
+    };
+  } catch (error) {
+    console.error('Error updating feature status in Supabase:', error);
+    return { error };
+  }
+};
+
+// Update feature votes in Supabase
 export const updateFeatureVotes = async (id: string, userId: string, increment: boolean) => {
   try {
-    const client = getSupabaseClient();
-    
-    // Check if user has already voted
-    const { data: existingVote, error: checkError } = await client
-      .from('feature_votes')
-      .select('id')
-      .eq('feature_id', id)
-      .eq('user_id', userId)
-      .maybeSingle();
-    
-    if (checkError) throw checkError;
-    
-    // If user has already voted and wants to remove vote
-    if (existingVote) {
-      // Remove the vote from feature_votes table
-      const { error: deleteError } = await client
-        .from('feature_votes')
-        .delete()
-        .eq('id', existingVote.id);
-      
-      if (deleteError) throw deleteError;
-      
-      // Decrement the votes count in features table
-      const { error: updateError } = await client.rpc(
-        'decrement', 
-        { row_id: id, x: 1 } as any
-      );
-      
-      if (updateError) throw updateError;
-      
-      return { action: 'removed', error: null };
-    } else {
-      // User hasn't voted, so add a vote
-      const { error: insertError } = await client
-        .from('feature_votes')
-        .insert([{
-          feature_id: id,
-          user_id: userId
-        }]);
-      
-      if (insertError) throw insertError;
-      
-      // Increment the votes count in features table
-      const { error: updateError } = await client.rpc(
-        'increment', 
-        { row_id: id, x: 1 } as any
-      );
-      
-      if (updateError) throw updateError;
-      
-      return { action: 'added', error: null };
-    }
+    const result = await voteForFeature(id, userId, increment);
+    return result;
   } catch (error) {
-    console.error('Error updating votes:', error);
-    return { action: null, error };
+    console.error('Error updating feature votes in Supabase:', error);
+    return { error };
   }
 };
 
-export function upvoteFeature(featureId: string): Promise<any> {
-  return supabase.rpc("increment", { feature_id: featureId } as any);
-}
-
-export function downvoteFeature(featureId: string): Promise<any> {
-  return supabase.rpc("decrement", { feature_id: featureId } as any);
-}
+// Helper function to check if a user can perform an action
+export const canPerformAction = async () => {
+  try {
+    const user = await getUserProfile();
+    return !!user;
+  } catch (error) {
+    console.error('Error checking if user can perform action:', error);
+    return false;
+  }
+};
