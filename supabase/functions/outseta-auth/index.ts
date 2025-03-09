@@ -6,12 +6,17 @@
 // command: supabase functions deploy outseta-auth --no-verify-jwt
 
 import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
+import { v5 as uuidv5 } from "https://deno.land/std@0.177.0/uuid/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+// UUID namespace for consistently generating UUIDs from Outseta IDs
+// This is a random UUID that we'll use as our namespace
+const OUTSETA_NAMESPACE = "a3fb08d7-9c92-4cab-a863-c55771939cf6";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -34,10 +39,22 @@ Deno.serve(async (req) => {
 
     console.log("JWT is valid");
 
+    // Extract the Outseta user ID
+    const outsetaUserId = payload.sub || payload.nameid;
+    if (!outsetaUserId) {
+      throw new Error("No user ID found in token");
+    }
+
+    // Generate a deterministic UUID v5 from the Outseta ID
+    // This ensures the same Outseta ID always maps to the same UUID
+    const uuidSub = uuidv5(outsetaUserId.toString(), OUTSETA_NAMESPACE);
+    
+    console.log(`Converted Outseta ID ${outsetaUserId} to UUID ${uuidSub}`);
+
     // Sanitize the payload - create a clean copy with only the fields we need
     // This avoids issues with malformed fields like 'amr' that cause parsing errors
     const sanitizedPayload = {
-      sub: payload.sub,
+      sub: uuidSub, // Use the UUID-formatted subject
       email: payload.email,
       given_name: payload.given_name,
       family_name: payload.family_name,
