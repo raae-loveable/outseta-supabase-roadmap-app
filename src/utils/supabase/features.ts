@@ -28,21 +28,30 @@ export const getFeatures = async (userId?: string) => {
         throw votesError;
       }
 
+      console.log('User votes:', votes);
+      
       // Convert to a set of feature IDs for O(1) lookup
       const userVotedFeatureIds = new Set(votes?.map(vote => vote.feature_id) || []);
+      
+      console.log('User voted feature IDs:', Array.from(userVotedFeatureIds));
 
       // Enhance the features with votedBy information
-      const typedFeatures = features?.map(feature => ({
-        ...feature,
-        id: feature.id,
-        title: feature.title,
-        description: feature.description,
-        status: feature.status as FeatureStatus,
-        votes: feature.votes,
-        votedBy: userVotedFeatureIds.has(feature.id) ? new Set([userId]) : new Set<string>(),
-        createdAt: new Date(feature.created_at),
-        updatedAt: new Date(feature.updated_at),
-      })) as Feature[];
+      const typedFeatures = features?.map(feature => {
+        const hasVoted = userVotedFeatureIds.has(feature.id);
+        console.log(`Feature ${feature.id} voted by user: ${hasVoted}`);
+        
+        return {
+          ...feature,
+          id: feature.id,
+          title: feature.title,
+          description: feature.description,
+          status: feature.status as FeatureStatus,
+          votes: feature.votes,
+          votedBy: hasVoted ? new Set([userId]) : new Set<string>(),
+          createdAt: new Date(feature.created_at),
+          updatedAt: new Date(feature.updated_at),
+        };
+      }) as Feature[];
 
       return typedFeatures || [];
     } else {
