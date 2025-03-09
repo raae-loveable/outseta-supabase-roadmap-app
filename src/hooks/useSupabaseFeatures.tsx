@@ -31,7 +31,9 @@ export function useSupabaseFeatures() {
       const { features: fetchedFeatures, error } = await fetchFeaturesFromSupabase(user?.uid);
       
       if (error) throw error;
-      setFeatures(fetchedFeatures);
+      if (fetchedFeatures) {
+        setFeatures(fetchedFeatures as Feature[]);
+      }
     } catch (error) {
       console.error('Error fetching features:', error);
       toast({
@@ -92,9 +94,13 @@ export function useSupabaseFeatures() {
     }
 
     try {
-      const { action, error } = await updateFeatureVotes(id, user.uid, increment);
+      const result = await updateFeatureVotes(id, user.uid, increment);
       
-      if (error) throw error;
+      if ('error' in result && result.error) {
+        throw result.error;
+      }
+      
+      const action = 'action' in result ? result.action : null;
       
       // Update local state based on the action
       if (action === 'removed') {

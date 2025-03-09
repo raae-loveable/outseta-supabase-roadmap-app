@@ -97,8 +97,8 @@ export const addFeature = async (
     // Return the newly created feature with the votedBy field
     return {
       ...feature,
-      votedBy: new Set([userId]), // The user who created the feature has voted for it
-    } as Feature;
+      votedBy: new Set([userId]) as Set<string>, // The user who created the feature has voted for it
+    };
   } catch (error) {
     console.error('Error in addFeature:', error);
     throw error;

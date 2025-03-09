@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Feature, FeatureRequestInput, FeatureStatus } from './types';
 import { getUserProfile, getFeatures, addFeature, updateFeature, voteForFeature } from './supabase-utils';
@@ -10,9 +11,9 @@ export const fetchFeaturesFromSupabase = async (userId?: string) => {
     return {
       features: features.map(feature => ({
         ...feature,
-        createdAt: new Date(feature.created_at),
-        updatedAt: new Date(feature.updated_at),
-      })),
+        createdAt: new Date(feature.created_at as string),
+        updatedAt: new Date(feature.updated_at as string),
+      })) as Feature[],
     };
   } catch (error) {
     console.error('Error fetching features from Supabase:', error);
@@ -34,7 +35,7 @@ export const addFeatureToSupabase = async (input: FeatureRequestInput, userId: s
         ...newFeature,
         createdAt: new Date(newFeature.created_at as string),
         updatedAt: new Date(newFeature.updated_at as string),
-      },
+      } as Feature,
     };
   } catch (error) {
     console.error('Error adding feature to Supabase:', error);
@@ -57,7 +58,7 @@ export const updateFeatureStatusInSupabase = async (id: string, status: FeatureS
         createdAt: new Date(updatedFeature.created_at as string),
         updatedAt: new Date(updatedFeature.updated_at as string),
         votedBy: new Set(), // Placeholder - we don't have vote info here
-      },
+      } as Feature,
     };
   } catch (error) {
     console.error('Error updating feature status in Supabase:', error);
