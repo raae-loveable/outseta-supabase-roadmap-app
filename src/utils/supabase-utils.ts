@@ -1,36 +1,34 @@
 
-import { supabaseAuth } from "@/integrations/supabase/authClient";
+import { supabase } from '@/integrations/supabase/client';
 
-// Increment a feature's vote count
-export const incrementFeatureVotes = async (featureId: string) => {
+// Function to increment a vote count
+export const incrementVoteCount = async (featureId: string) => {
   try {
-    const { error } = await supabaseAuth.rpc(
+    const { data, error } = await supabase.rpc(
       'increment',
-      { row_id: featureId, x: 1 } as any
+      { row_id: featureId, x: 1 }
     );
     
     if (error) throw error;
-    
-    return { success: true, error: null };
+    return { success: true, data };
   } catch (error) {
-    console.error('Error incrementing votes:', error);
+    console.error('Error incrementing vote count:', error);
     return { success: false, error };
   }
 };
 
-// Decrement a feature's vote count
-export const decrementFeatureVotes = async (featureId: string) => {
+// Function to decrement a vote count
+export const decrementVoteCount = async (featureId: string) => {
   try {
-    const { error } = await supabaseAuth.rpc(
+    const { data, error } = await supabase.rpc(
       'decrement',
-      { row_id: featureId, x: 1 } as any
+      { row_id: featureId, x: 1 }
     );
     
     if (error) throw error;
-    
-    return { success: true, error: null };
+    return { success: true, data };
   } catch (error) {
-    console.error('Error decrementing votes:', error);
+    console.error('Error decrementing vote count:', error);
     return { success: false, error };
   }
 };
