@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
 
   try {
     const JWKS = jose.createRemoteJWKSet(
-      new URL(`https://${Deno.env.get("OUTSETA_DOMAIN")}/.well-known/jwks`)
+      new URL(`https://snippets.outseta.com/.well-known/jwks`)
     );
 
     // Use the JSON Web Key (JWK) to verify the token
