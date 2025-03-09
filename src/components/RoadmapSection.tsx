@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { StatusFilter } from './roadmap/StatusFilter';
 import { SortControls } from './roadmap/SortControls';
 import { FeatureGrid } from './roadmap/FeatureGrid';
+import { Loader2 } from 'lucide-react';
 
 interface RoadmapSectionProps {
   features: Feature[];
@@ -16,6 +17,7 @@ interface RoadmapSectionProps {
   setSortBy: (sort: 'votes' | 'newest') => void;
   isLoggedIn?: boolean;
   userId?: string;
+  isLoading?: boolean;
   className?: string;
 }
 
@@ -29,6 +31,7 @@ export function RoadmapSection({
   setSortBy,
   isLoggedIn,
   userId,
+  isLoading = false,
   className 
 }: RoadmapSectionProps) {
   const elementsRef = useRef<(HTMLElement | null)[]>([]);
@@ -70,11 +73,18 @@ export function RoadmapSection({
           </div>
         </div>
         
-        <FeatureGrid 
-          features={features} 
-          onVote={onVote} 
-          userId={userId} 
-        />
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <span className="ml-2 text-lg">Loading features...</span>
+          </div>
+        ) : (
+          <FeatureGrid 
+            features={features} 
+            onVote={onVote} 
+            userId={userId} 
+          />
+        )}
       </div>
     </section>
   );

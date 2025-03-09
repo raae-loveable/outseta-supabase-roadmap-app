@@ -1,28 +1,29 @@
+
 import React, { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { RoadmapSection } from '@/components/RoadmapSection';
 import { SubmitFeatureForm } from '@/components/SubmitFeatureForm';
-import { useFeatures } from '@/hooks/useFeatures';
 import { registerOutsetaEvents } from '@/utils/outseta';
 import { useOutsetaAuth } from '@/hooks/useOutsetaAuth';
+import { useSupabaseFeatures } from '@/hooks/useSupabaseFeatures';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
   const {
     features,
     featureCounts,
+    isLoading,
     addFeature,
     updateVotes,
     filterStatus,
     setFilterStatus,
     sortBy,
     setSortBy,
-  } = useFeatures();
+  } = useSupabaseFeatures();
   
-  // Use our simplified hook
-  const { user, loading } = useOutsetaAuth();
-  // Simple derived state - if user exists, they're logged in
+  // Use our Outseta auth hook
+  const { user, loading: authLoading } = useOutsetaAuth();
   const isLoggedIn = !!user;
 
   // Register Outseta events when component mounts
@@ -71,7 +72,7 @@ const Index = () => {
 
   const handleVote = async (featureId: string, increment: boolean) => {
     // Check if auth state is still loading
-    if (loading) {
+    if (authLoading) {
       toast({
         title: "Please wait",
         description: "Checking your authentication status...",
@@ -91,7 +92,7 @@ const Index = () => {
     
     // User exists, proceed with vote
     console.log("Voting with user ID:", user.uid);
-    updateVotes(featureId, increment, user.uid);
+    updateVotes(featureId, increment);
   };
 
   return (
@@ -111,6 +112,7 @@ const Index = () => {
           setSortBy={setSortBy}
           isLoggedIn={isLoggedIn}
           userId={user?.uid}
+          isLoading={isLoading}
         />
         
         <SubmitFeatureForm onSubmit={handleFeatureSubmit} isLoggedIn={isLoggedIn} />
