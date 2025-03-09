@@ -3,10 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Feature, FeatureStatus } from '../types';
 
 // Fetch features from Supabase
-export const getFeatures = async (userId?: string) => {
+export const getFeatures = async (userId?: string, customClient = supabase) => {
   try {
     console.log('Fetching features from Supabase');
-    let { data: features, error } = await supabase
+    let { data: features, error } = await customClient
       .from('features')
       .select('*')
       .order('votes', { ascending: false });
@@ -18,7 +18,7 @@ export const getFeatures = async (userId?: string) => {
 
     // If userId is provided, fetch the user's votes
     if (userId) {
-      const { data: votes, error: votesError } = await supabase
+      const { data: votes, error: votesError } = await customClient
         .from('feature_votes')
         .select('feature_id')
         .eq('user_id', userId);
@@ -80,7 +80,8 @@ export const getFeatures = async (userId?: string) => {
 export const addFeature = async (
   title: string,
   description: string,
-  userId: string
+  userId: string,
+  customClient = supabase
 ) => {
   try {
     console.log('Adding feature to Supabase:', { title, description });
@@ -92,7 +93,7 @@ export const addFeature = async (
       votes: 1,
     };
 
-    const { data: feature, error } = await supabase
+    const { data: feature, error } = await customClient
       .from('features')
       .insert(newFeature)
       .select()
@@ -105,7 +106,7 @@ export const addFeature = async (
 
     // Add the user's vote for their own feature
     if (feature) {
-      const { error: voteError } = await supabase
+      const { error: voteError } = await customClient
         .from('feature_votes')
         .insert({
           feature_id: feature.id,
@@ -139,12 +140,13 @@ export const addFeature = async (
 // Update a feature in Supabase
 export const updateFeature = async (
   id: string,
-  updates: { title?: string; description?: string; status?: FeatureStatus }
+  updates: { title?: string; description?: string; status?: FeatureStatus },
+  customClient = supabase
 ) => {
   try {
     console.log('Updating feature in Supabase:', { id, updates });
     
-    const { data: feature, error } = await supabase
+    const { data: feature, error } = await customClient
       .from('features')
       .update(updates)
       .eq('id', id)

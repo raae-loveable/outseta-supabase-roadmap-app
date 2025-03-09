@@ -19,7 +19,7 @@ export function useSupabaseFeatures() {
   const [isLoading, setIsLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<FeatureStatus | 'all'>('all');
   const [sortBy, setSortBy] = useState<'votes' | 'newest'>('votes');
-  const { user } = useOutsetaAuth();
+  const { user, supabaseClient } = useOutsetaAuth();
   
   // Calculate feature counts
   const featureCounts = calculateFeatureCounts(features);
@@ -28,7 +28,10 @@ export function useSupabaseFeatures() {
   const fetchFeatures = useCallback(async () => {
     try {
       setIsLoading(true);
-      const { features: fetchedFeatures, error } = await fetchFeaturesFromSupabase(user?.uid);
+      const { features: fetchedFeatures, error } = await fetchFeaturesFromSupabase(
+        user?.uid, 
+        supabaseClient
+      );
       
       if (error) throw error;
       if (fetchedFeatures) {
@@ -44,7 +47,7 @@ export function useSupabaseFeatures() {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, supabaseClient]);
 
   // Add a new feature
   const addFeature = useCallback(async (input: FeatureRequestInput) => {
@@ -58,7 +61,11 @@ export function useSupabaseFeatures() {
     }
 
     try {
-      const { feature, error } = await addFeatureToSupabase(input, user.uid);
+      const { feature, error } = await addFeatureToSupabase(
+        input, 
+        user.uid, 
+        supabaseClient
+      );
       
       if (error) throw error;
       if (feature) {
@@ -80,7 +87,7 @@ export function useSupabaseFeatures() {
       });
       return null;
     }
-  }, [user]);
+  }, [user, supabaseClient]);
 
   // Update votes for a feature
   const updateVotes = useCallback(async (id: string, increment: boolean) => {
@@ -94,7 +101,12 @@ export function useSupabaseFeatures() {
     }
 
     try {
-      const result = await updateFeatureVotes(id, user.uid, increment);
+      const result = await updateFeatureVotes(
+        id, 
+        user.uid, 
+        increment, 
+        supabaseClient
+      );
       
       if ('error' in result && result.error) {
         throw result.error;
@@ -154,7 +166,7 @@ export function useSupabaseFeatures() {
         variant: "destructive",
       });
     }
-  }, [user]);
+  }, [user, supabaseClient]);
 
   // Get filtered and sorted features
   const filteredAndSortedFeatures = useCallback(() => {

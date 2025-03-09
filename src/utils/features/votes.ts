@@ -5,12 +5,13 @@ import { voteForFeature } from '../supabase/votes';
 export const updateFeatureVotes = async (
   featureId: string,
   userId: string,
-  increment: boolean
+  increment: boolean,
+  customClient?: any
 ) => {
   try {
     console.log('Updating votes for feature:', { featureId, userId, increment });
     
-    const result = await voteForFeature(featureId, userId, increment);
+    const result = await voteForFeature(featureId, userId, increment, customClient);
     
     if ('error' in result) {
       console.error('Error updating votes:', result.error);

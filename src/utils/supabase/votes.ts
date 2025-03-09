@@ -5,13 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 export const voteForFeature = async (
   featureId: string,
   userId: string,
-  increment: boolean
+  increment: boolean,
+  customClient = supabase
 ) => {
   try {
     console.log('Voting for feature in Supabase:', { featureId, userId, increment });
     
     // Check if user has already voted for this feature
-    const { data: existingVote, error: checkError } = await supabase
+    const { data: existingVote, error: checkError } = await customClient
       .from('feature_votes')
       .select('*')
       .eq('feature_id', featureId)
@@ -26,7 +27,7 @@ export const voteForFeature = async (
     // Add or remove vote based on the increment flag
     if (increment && !existingVote) {
       // Add vote
-      const { error: addError } = await supabase
+      const { error: addError } = await customClient
         .from('feature_votes')
         .insert({
           feature_id: featureId,
@@ -39,7 +40,7 @@ export const voteForFeature = async (
       }
 
       // Increment the votes count in the features table
-      const { data: feature, error: getError } = await supabase
+      const { data: feature, error: getError } = await customClient
         .from('features')
         .select('votes')
         .eq('id', featureId)
@@ -52,7 +53,7 @@ export const voteForFeature = async (
       
       const newVoteCount = (feature.votes || 0) + 1;
       
-      const { error: updateError } = await supabase
+      const { error: updateError } = await customClient
         .from('features')
         .update({ votes: newVoteCount })
         .eq('id', featureId);
@@ -65,7 +66,7 @@ export const voteForFeature = async (
       return { action: 'added' };
     } else if (!increment && existingVote) {
       // Remove vote
-      const { error: removeError } = await supabase
+      const { error: removeError } = await customClient
         .from('feature_votes')
         .delete()
         .eq('feature_id', featureId)
@@ -77,7 +78,7 @@ export const voteForFeature = async (
       }
 
       // Decrement the votes count in the features table
-      const { data: feature, error: getError } = await supabase
+      const { data: feature, error: getError } = await customClient
         .from('features')
         .select('votes')
         .eq('id', featureId)
@@ -90,7 +91,7 @@ export const voteForFeature = async (
       
       const newVoteCount = Math.max((feature.votes || 0) - 1, 0); // Ensure we don't go below zero
       
-      const { error: updateError } = await supabase
+      const { error: updateError } = await customClient
         .from('features')
         .update({ votes: newVoteCount })
         .eq('id', featureId);
