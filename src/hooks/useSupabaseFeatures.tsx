@@ -1,9 +1,18 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Feature, FeatureRequestInput, FeatureStatus } from '@/utils/types';
 import { toast } from '@/components/ui/use-toast';
 import { useOutsetaAuth } from './useOutsetaAuth';
+import { 
+  fetchFeaturesFromSupabase, 
+  addFeatureToSupabase, 
+  updateFeatureVotes 
+} from '@/utils/featureOperations';
+import {
+  filterFeaturesByStatus,
+  sortFeatures,
+  calculateFeatureCounts
+} from '@/utils/featureFilters';
 
 export function useSupabaseFeatures() {
   const [features, setFeatures] = useState<Feature[]>([]);
@@ -11,21 +20,6 @@ export function useSupabaseFeatures() {
   const [filterStatus, setFilterStatus] = useState<FeatureStatus | 'all'>('all');
   const [sortBy, setSortBy] = useState<'votes' | 'newest'>('votes');
   const { user } = useOutsetaAuth();
-
-  // Helper function to calculate counts by status
-  const calculateFeatureCounts = (features: Feature[]): Record<FeatureStatus, number> => {
-    const counts: Record<FeatureStatus, number> = {
-      'planned': 0,
-      'in-progress': 0,
-      'completed': 0
-    };
-    
-    features.forEach(feature => {
-      counts[feature.status as FeatureStatus] = (counts[feature.status as FeatureStatus] || 0) + 1;
-    });
-    
-    return counts;
-  };
   
   // Calculate feature counts
   const featureCounts = calculateFeatureCounts(features);
@@ -34,44 +28,10 @@ export function useSupabaseFeatures() {
   const fetchFeatures = useCallback(async () => {
     try {
       setIsLoading(true);
+      const { features: fetchedFeatures, error } = await fetchFeaturesFromSupabase(user?.uid);
       
-      // Get all features
-      const { data: featuresData, error: featuresError } = await supabase
-        .from('features')
-        .select('*');
-      
-      if (featuresError) throw featuresError;
-      
-      // If user is logged in, get their votes
-      let userVotes: Record<string, boolean> = {};
-      
-      if (user) {
-        const { data: votesData, error: votesError } = await supabase
-          .from('feature_votes')
-          .select('feature_id')
-          .eq('user_id', user.uid);
-        
-        if (!votesError && votesData) {
-          userVotes = votesData.reduce((acc: Record<string, boolean>, vote) => {
-            acc[vote.feature_id] = true;
-            return acc;
-          }, {});
-        }
-      }
-      
-      // Transform the data to match our Feature type
-      const transformedFeatures: Feature[] = featuresData.map(feature => ({
-        id: feature.id,
-        title: feature.title,
-        description: feature.description,
-        status: feature.status as FeatureStatus, // Fix: Cast string to FeatureStatus
-        votes: feature.votes,
-        votedBy: new Set(userVotes[feature.id] ? [user?.uid || ''] : []),
-        createdAt: new Date(feature.created_at),
-        updatedAt: new Date(feature.updated_at)
-      }));
-      
-      setFeatures(transformedFeatures);
+      if (error) throw error;
+      setFeatures(fetchedFeatures);
     } catch (error) {
       console.error('Error fetching features:', error);
       toast({
@@ -96,38 +56,19 @@ export function useSupabaseFeatures() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('features')
-        .insert([{
-          title: input.title,
-          description: input.description,
-          status: 'planned',
-          votes: 0
-        }])
-        .select()
-        .single();
+      const { feature, error } = await addFeatureToSupabase(input, user.uid);
       
       if (error) throw error;
+      if (feature) {
+        setFeatures(prev => [feature, ...prev]);
+        
+        toast({
+          title: "Feature Added",
+          description: "Your feature request has been submitted successfully.",
+        });
+      }
       
-      const newFeature: Feature = {
-        id: data.id,
-        title: data.title,
-        description: data.description,
-        status: data.status as FeatureStatus, // Fix: Cast string to FeatureStatus
-        votes: data.votes,
-        votedBy: new Set<string>(),
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at)
-      };
-      
-      setFeatures(prev => [newFeature, ...prev]);
-      
-      toast({
-        title: "Feature Added",
-        description: "Your feature request has been submitted successfully.",
-      });
-      
-      return newFeature;
+      return feature;
     } catch (error) {
       console.error('Error adding feature:', error);
       toast({
@@ -151,36 +92,12 @@ export function useSupabaseFeatures() {
     }
 
     try {
-      // Check if user has already voted
-      const { data: existingVote, error: checkError } = await supabase
-        .from('feature_votes')
-        .select('id')
-        .eq('feature_id', id)
-        .eq('user_id', user.uid)
-        .maybeSingle();
+      const { action, error } = await updateFeatureVotes(id, user.uid, increment);
       
-      if (checkError) throw checkError;
+      if (error) throw error;
       
-      // If user has already voted and wants to vote again (toggle off)
-      if (existingVote) {
-        // Remove the vote from feature_votes table
-        const { error: deleteError } = await supabase
-          .from('feature_votes')
-          .delete()
-          .eq('id', existingVote.id);
-        
-        if (deleteError) throw deleteError;
-        
-        // Decrement the votes count in features table
-        // Fix: Use the correct RPC call with proper typing
-        const { error: updateError } = await supabase.rpc('decrement', { 
-          x: 1, 
-          row_id: id 
-        } as any); // Use type assertion to bypass TypeScript error
-        
-        if (updateError) throw updateError;
-        
-        // Update local state
+      // Update local state based on the action
+      if (action === 'removed') {
         setFeatures(prev => 
           prev.map(feature => {
             if (feature.id === id) {
@@ -201,28 +118,7 @@ export function useSupabaseFeatures() {
           title: "Vote Removed",
           description: "Your vote has been removed from this feature.",
         });
-      } else {
-        // User hasn't voted, so add a vote
-        // Add vote to feature_votes table
-        const { error: insertError } = await supabase
-          .from('feature_votes')
-          .insert([{
-            feature_id: id,
-            user_id: user.uid
-          }]);
-        
-        if (insertError) throw insertError;
-        
-        // Increment the votes count in features table
-        // Fix: Use the correct RPC call with proper typing
-        const { error: updateError } = await supabase.rpc('increment', { 
-          x: 1, 
-          row_id: id 
-        } as any); // Use type assertion to bypass TypeScript error
-        
-        if (updateError) throw updateError;
-        
-        // Update local state
+      } else if (action === 'added') {
         setFeatures(prev => 
           prev.map(feature => {
             if (feature.id === id) {
@@ -254,27 +150,11 @@ export function useSupabaseFeatures() {
     }
   }, [user]);
 
-  // Helper functions to filter and sort features
-  const filterFeaturesByStatus = useCallback((features: Feature[], status: FeatureStatus | 'all') => {
-    if (status === 'all') return features;
-    return features.filter(feature => feature.status === status);
-  }, []);
-
-  const sortFeatures = useCallback((features: Feature[], sortBy: 'votes' | 'newest') => {
-    if (sortBy === 'votes') {
-      return [...features].sort((a, b) => b.votes - a.votes);
-    } else {
-      return [...features].sort((a, b) => {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
-    }
-  }, []);
-
   // Get filtered and sorted features
   const filteredAndSortedFeatures = useCallback(() => {
     const filtered = filterFeaturesByStatus(features, filterStatus);
     return sortFeatures(filtered, sortBy);
-  }, [features, filterStatus, sortBy, filterFeaturesByStatus, sortFeatures]);
+  }, [features, filterStatus, sortBy]);
 
   // Fetch features on component mount and when user changes
   useEffect(() => {
