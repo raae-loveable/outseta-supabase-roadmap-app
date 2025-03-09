@@ -58,6 +58,7 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
             <ThumbsUp 
               className="w-5 h-5"
               fill={hasVoted ? "currentColor" : "none"}
+              strokeWidth={hasVoted ? 3 : 2}  
             />
           </button>
           
