@@ -6,7 +6,7 @@ export const incrementVoteCount = async (featureId: string) => {
   try {
     const { data, error } = await supabase.rpc(
       'increment',
-      { row_id: featureId, x: 1 }
+      { row_id: featureId, x: 1 } as any
     );
     
     if (error) throw error;
@@ -22,7 +22,7 @@ export const decrementVoteCount = async (featureId: string) => {
   try {
     const { data, error } = await supabase.rpc(
       'decrement',
-      { row_id: featureId, x: 1 }
+      { row_id: featureId, x: 1 } as any
     );
     
     if (error) throw error;
