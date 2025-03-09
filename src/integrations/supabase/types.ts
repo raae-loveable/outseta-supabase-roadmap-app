@@ -44,7 +44,8 @@ export type Database = {
           creator_id: string | null
           description: string
           id: string
-          status: string
+          status: Database["public"]["Enums"]["feature_status"]
+          status_2: string
           title: string
           updated_at: string
           votes: number
@@ -54,7 +55,8 @@ export type Database = {
           creator_id?: string | null
           description: string
           id?: string
-          status: string
+          status?: Database["public"]["Enums"]["feature_status"]
+          status_2: string
           title: string
           updated_at?: string
           votes?: number
@@ -64,7 +66,8 @@ export type Database = {
           creator_id?: string | null
           description?: string
           id?: string
-          status?: string
+          status?: Database["public"]["Enums"]["feature_status"]
+          status_2?: string
           title?: string
           updated_at?: string
           votes?: number
@@ -79,7 +82,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      feature_status: "requested" | "planned" | "in-progress" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never

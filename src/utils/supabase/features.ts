@@ -89,7 +89,7 @@ export const addFeature = async (
     const newFeature = {
       title,
       description,
-      status: 'planned' as FeatureStatus, // Changed from 'requested' to 'planned'
+      status: 'planned' as FeatureStatus, // Correctly using 'planned' as the default status
       votes: 1,
       creator_id: userId, // Store the user ID as the creator
     };
