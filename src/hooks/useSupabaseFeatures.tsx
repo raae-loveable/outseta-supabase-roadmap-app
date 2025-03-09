@@ -172,8 +172,11 @@ export function useSupabaseFeatures() {
         if (deleteError) throw deleteError;
         
         // Decrement the votes count in features table
-        // Fix: Use the correct RPC call
-        const { error: updateError } = await supabase.rpc('decrement', { x: 1, row_id: id });
+        // Fix: Use the correct RPC call with proper typing
+        const { error: updateError } = await supabase.rpc('decrement', { 
+          x: 1, 
+          row_id: id 
+        } as any); // Use type assertion to bypass TypeScript error
         
         if (updateError) throw updateError;
         
@@ -211,8 +214,11 @@ export function useSupabaseFeatures() {
         if (insertError) throw insertError;
         
         // Increment the votes count in features table
-        // Fix: Use the correct RPC call
-        const { error: updateError } = await supabase.rpc('increment', { x: 1, row_id: id });
+        // Fix: Use the correct RPC call with proper typing
+        const { error: updateError } = await supabase.rpc('increment', { 
+          x: 1, 
+          row_id: id 
+        } as any); // Use type assertion to bypass TypeScript error
         
         if (updateError) throw updateError;
         

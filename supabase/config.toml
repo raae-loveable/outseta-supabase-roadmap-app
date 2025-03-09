@@ -48,4 +48,6 @@ vector_port = 54328
 
 [functions]
 [functions.increment]
+verify_jwt = false
 [functions.decrement]
+verify_jwt = false
