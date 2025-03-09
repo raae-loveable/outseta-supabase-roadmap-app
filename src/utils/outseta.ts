@@ -1,11 +1,10 @@
-
 // Types for the Outseta global object
 declare global {
   interface Window {
     Outseta?: {
       getUser: () => Promise<any>;
       getAccessToken: () => Promise<string | null>;
-      getJwtPayload: () => Promise<any>;
+      getJwtPayload: () => any; // Changed to non-async since it's synchronous
       on: (event: string, callback: (data: any) => void) => void;
       auth: {
         open: (options: { widgetMode: string }) => void;
@@ -32,12 +31,11 @@ export const openOutsetaSignUp = () => {
   }
 };
 
-// Get the decoded JWT payload directly
-export const getAuthPayload = async () => {
+// Get the decoded JWT payload directly - now synchronous
+export const getAuthPayload = () => {
   if (window.Outseta) {
     try {
-      const payload = await window.Outseta.getJwtPayload();
-      console.log("JWT payload from Outseta:", payload);
+      const payload = window.Outseta.getJwtPayload();
       return payload;
     } catch (error) {
       console.error("Error getting JWT payload:", error);
@@ -74,14 +72,13 @@ export const registerOutsetaEvents = () => {
   console.log("Registering Outseta events...");
   
   if (window.Outseta) {
-    // Listen only for access token changes - this includes the JWT payload
-    // This event handles both login and logout scenarios
+    // Listen only for access token changes - this handles both login and logout
     window.Outseta.on('accessToken.set', (jwtPayload) => {
       console.log("Outseta accessToken.set event triggered with JWT payload:", jwtPayload);
       
       // Check if jwtPayload exists (login) or is undefined (logout)
       const isLoggedIn = !!jwtPayload;
-      const userId = jwtPayload?.uid || null;
+      const userId = jwtPayload?.sub || jwtPayload?.nameid || null;
       
       // Dispatch a custom event that our app can listen for
       const event = new CustomEvent('outseta:auth:updated', { 
@@ -108,22 +105,8 @@ export const registerOutsetaEvents = () => {
   }
 };
 
-// Helper to check authentication state on page load
+// No longer needed as we check auth state in the hook
 export const checkInitialAuthState = async () => {
-  console.log("Checking initial auth state using JWT payload...");
-  
-  try {
-    const jwtPayload = await getAuthPayload();
-    if (jwtPayload) {
-      const userId = jwtPayload.uid;
-      console.log("Initial auth check: User is logged in with ID:", userId);
-      return { isLoggedIn: true, user: jwtPayload, userId };
-    } else {
-      console.log("Initial auth check: User is not logged in (no JWT payload)");
-      return { isLoggedIn: false, user: null, userId: null };
-    }
-  } catch (error) {
-    console.error("Error in initial auth check:", error);
-    return { isLoggedIn: false, user: null, userId: null };
-  }
+  console.log("DEPRECATED: Use useOutsetaAuth hook instead");
+  return { isLoggedIn: false, user: null, userId: null };
 };

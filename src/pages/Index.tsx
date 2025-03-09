@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { RoadmapSection } from '@/components/RoadmapSection';
 import { SubmitFeatureForm } from '@/components/SubmitFeatureForm';
 import { useFeatures } from '@/hooks/useFeatures';
-import { registerOutsetaEvents, checkInitialAuthState } from '@/utils/outseta';
+import { registerOutsetaEvents } from '@/utils/outseta';
+import { useOutsetaAuth } from '@/hooks/useOutsetaAuth';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
@@ -19,70 +21,12 @@ const Index = () => {
     setSortBy,
   } = useFeatures();
   
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userId, setUserId] = useState<string>('');
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Use our new hook instead of managing auth state manually
+  const { isLoggedIn, user, loading } = useOutsetaAuth();
 
-  // Initialize Outseta events and check initial auth state
+  // Register Outseta events when component mounts
   useEffect(() => {
-    const initializeOutseta = async () => {
-      // Check if Outseta is available in the window object
-      if (typeof window !== 'undefined') {
-        // Register event listeners for auth changes
-        registerOutsetaEvents();
-        
-        // Check initial authentication state using JWT payload
-        const { isLoggedIn, userId } = await checkInitialAuthState();
-        setIsLoggedIn(isLoggedIn);
-        
-        if (userId) {
-          setUserId(userId);
-          console.log("User is logged in with ID:", userId);
-        }
-        
-        setIsInitialized(true);
-      }
-    };
-    
-    initializeOutseta();
-  }, []);
-  
-  // Listen for auth events - simplified to handle a single event type
-  useEffect(() => {
-    const handleAuthUpdate = (event: CustomEvent) => {
-      console.log("Auth event received:", event.detail);
-      
-      const isLoggedIn = event.detail?.isLoggedIn;
-      const userId = event.detail?.userId || event.detail?.jwtPayload?.uid;
-      
-      // Update authentication state
-      setIsLoggedIn(!!isLoggedIn);
-      
-      if (isLoggedIn && userId) {
-        setUserId(userId);
-        console.log("Updated user ID after auth event:", userId);
-        
-        toast({
-          title: "Logged in",
-          description: "You are now logged in.",
-        });
-      } else {
-        // Handle logout
-        setUserId('');
-        console.log("User logged out");
-        
-        toast({
-          title: "Logged out",
-          description: "You have been logged out successfully.",
-        });
-      }
-    };
-    
-    window.addEventListener('outseta:auth:updated', handleAuthUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('outseta:auth:updated', handleAuthUpdate as EventListener);
-    };
+    registerOutsetaEvents();
   }, []);
 
   useEffect(() => {
@@ -125,11 +69,11 @@ const Index = () => {
   };
 
   const handleVote = async (featureId: string, increment: boolean) => {
-    // Check if we've fully initialized
-    if (!isInitialized) {
+    // Check if auth state is still loading
+    if (loading) {
       toast({
         title: "Please wait",
-        description: "System is still initializing.",
+        description: "Checking your authentication status...",
       });
       return;
     }
@@ -145,7 +89,7 @@ const Index = () => {
     }
     
     // Check if we have a user ID
-    if (!userId) {
+    if (!user?.uid) {
       toast({
         title: "User data error",
         description: "Could not retrieve your user information. Please try again.",
@@ -155,8 +99,8 @@ const Index = () => {
     }
     
     // We have the user ID, proceed with vote
-    console.log("Voting with user ID:", userId);
-    updateVotes(featureId, increment, userId);
+    console.log("Voting with user ID:", user.uid);
+    updateVotes(featureId, increment, user.uid);
   };
 
   return (
@@ -175,7 +119,7 @@ const Index = () => {
           sortBy={sortBy}
           setSortBy={setSortBy}
           isLoggedIn={isLoggedIn}
-          userId={userId}
+          userId={user?.uid}
         />
         
         <SubmitFeatureForm onSubmit={handleFeatureSubmit} isLoggedIn={isLoggedIn} />
