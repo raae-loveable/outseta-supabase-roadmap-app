@@ -14,10 +14,15 @@ export async function createRpcFunctions() {
   
   // Test the RPC functions (will be deleted in final code)
   try {
-    // Use type assertion to bypass TypeScript errors since the Database type definition
-    // doesn't include our custom RPC functions
-    await supabase.rpc('increment', { x: 1, row_id: 'some-id' } as any);
-    await supabase.rpc('decrement', { x: 1, row_id: 'some-id' } as any);
+    // Use a more explicit type assertion for the RPC function parameters
+    await supabase.rpc(
+      'increment', 
+      { x: 1, row_id: 'some-id' } as unknown as Record<string, unknown>
+    );
+    await supabase.rpc(
+      'decrement', 
+      { x: 1, row_id: 'some-id' } as unknown as Record<string, unknown>
+    );
     console.log('RPC functions are working');
   } catch (error) {
     console.error('Error with RPC functions:', error);

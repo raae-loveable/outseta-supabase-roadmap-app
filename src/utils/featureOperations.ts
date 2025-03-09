@@ -107,10 +107,11 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       if (deleteError) throw deleteError;
       
       // Decrement the votes count in features table
-      const { error: updateError } = await supabase.rpc('decrement', { 
-        x: 1, 
-        row_id: id 
-      } as any); // Use type assertion to bypass TypeScript error
+      // Use explicit type assertion to bypass TypeScript error
+      const { error: updateError } = await supabase.rpc(
+        'decrement', 
+        { x: 1, row_id: id } as unknown as Record<string, unknown>
+      );
       
       if (updateError) throw updateError;
       
@@ -127,10 +128,11 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       if (insertError) throw insertError;
       
       // Increment the votes count in features table
-      const { error: updateError } = await supabase.rpc('increment', { 
-        x: 1, 
-        row_id: id 
-      } as any); // Use type assertion to bypass TypeScript error
+      // Use explicit type assertion to bypass TypeScript error
+      const { error: updateError } = await supabase.rpc(
+        'increment', 
+        { x: 1, row_id: id } as unknown as Record<string, unknown>
+      );
       
       if (updateError) throw updateError;
       
