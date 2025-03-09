@@ -8,18 +8,16 @@ export async function createRpcFunctions() {
   const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
   
   const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+
+  // Note: This requires properly formatted SQL functions to exist in the database
+  // We'll need to create these functions in Supabase SQL editor
   
-  // Create increment function
-  await supabase.rpc('create_increment_function', {}, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  // Create decrement function
-  await supabase.rpc('create_decrement_function', {}, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  // Test the RPC functions (will be deleted in final code)
+  try {
+    await supabase.rpc('increment', { x: 1, row_id: 'some-id' });
+    await supabase.rpc('decrement', { x: 1, row_id: 'some-id' });
+    console.log('RPC functions are working');
+  } catch (error) {
+    console.error('Error with RPC functions:', error);
+  }
 }

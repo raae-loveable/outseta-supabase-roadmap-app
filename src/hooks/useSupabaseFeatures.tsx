@@ -64,7 +64,7 @@ export function useSupabaseFeatures() {
         id: feature.id,
         title: feature.title,
         description: feature.description,
-        status: feature.status as FeatureStatus,
+        status: feature.status as FeatureStatus, // Fix: Cast string to FeatureStatus
         votes: feature.votes,
         votedBy: new Set(userVotes[feature.id] ? [user?.uid || ''] : []),
         createdAt: new Date(feature.created_at),
@@ -113,7 +113,7 @@ export function useSupabaseFeatures() {
         id: data.id,
         title: data.title,
         description: data.description,
-        status: data.status,
+        status: data.status as FeatureStatus, // Fix: Cast string to FeatureStatus
         votes: data.votes,
         votedBy: new Set<string>(),
         createdAt: new Date(data.created_at),
@@ -172,10 +172,8 @@ export function useSupabaseFeatures() {
         if (deleteError) throw deleteError;
         
         // Decrement the votes count in features table
-        const { error: updateError } = await supabase
-          .from('features')
-          .update({ votes: supabase.rpc('decrement', { x: 1 }) })
-          .eq('id', id);
+        // Fix: Use the correct RPC call
+        const { error: updateError } = await supabase.rpc('decrement', { x: 1, row_id: id });
         
         if (updateError) throw updateError;
         
@@ -213,10 +211,8 @@ export function useSupabaseFeatures() {
         if (insertError) throw insertError;
         
         // Increment the votes count in features table
-        const { error: updateError } = await supabase
-          .from('features')
-          .update({ votes: supabase.rpc('increment', { x: 1 }) })
-          .eq('id', id);
+        // Fix: Use the correct RPC call
+        const { error: updateError } = await supabase.rpc('increment', { x: 1, row_id: id });
         
         if (updateError) throw updateError;
         
