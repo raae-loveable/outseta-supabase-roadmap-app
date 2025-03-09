@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
@@ -21,8 +20,10 @@ const Index = () => {
     setSortBy,
   } = useFeatures();
   
-  // Use our new hook instead of managing auth state manually
-  const { isLoggedIn, user, loading } = useOutsetaAuth();
+  // Use our simplified hook
+  const { user, loading } = useOutsetaAuth();
+  // Simple derived state - if user exists, they're logged in
+  const isLoggedIn = !!user;
 
   // Register Outseta events when component mounts
   useEffect(() => {
@@ -56,7 +57,7 @@ const Index = () => {
   }, []);
 
   const handleFeatureSubmit = (data: any) => {
-    if (!isLoggedIn) {
+    if (!user) {
       toast({
         title: "Authentication required",
         description: "Please sign in to submit a feature request.",
@@ -78,8 +79,8 @@ const Index = () => {
       return;
     }
     
-    // Check authentication
-    if (!isLoggedIn) {
+    // Check authentication directly with user object
+    if (!user) {
       toast({
         title: "Authentication required",
         description: "Please sign in to vote for features.",
@@ -88,17 +89,7 @@ const Index = () => {
       return;
     }
     
-    // Check if we have a user ID
-    if (!user?.uid) {
-      toast({
-        title: "User data error",
-        description: "Could not retrieve your user information. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    // We have the user ID, proceed with vote
+    // User exists, proceed with vote
     console.log("Voting with user ID:", user.uid);
     updateVotes(featureId, increment, user.uid);
   };

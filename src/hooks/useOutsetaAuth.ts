@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { OutsetaUser } from '@/utils/types';
 
 export function useOutsetaAuth() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [user, setUser] = useState<OutsetaUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -22,17 +21,14 @@ export function useOutsetaAuth() {
             lastName: jwtPayload.family_name,
             fullName: jwtPayload.name
           });
-          setIsLoggedIn(true);
           console.log("Auth state refreshed: User is logged in with ID:", userId);
         } else {
           setUser(null);
-          setIsLoggedIn(false);
           console.log("Auth state refreshed: User is not logged in");
         }
       } catch (error) {
         console.error("Error refreshing auth state:", error);
         setUser(null);
-        setIsLoggedIn(false);
       }
       
       setLoading(false);
@@ -58,7 +54,7 @@ export function useOutsetaAuth() {
   }, []);
 
   return {
-    isLoggedIn,
+    isLoggedIn: !!user, // Simplify - user exists means logged in
     user,
     loading,
     refreshAuthState
