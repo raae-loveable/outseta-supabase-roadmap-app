@@ -7,7 +7,6 @@
 
 import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
 import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
-import { encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +17,13 @@ const corsHeaders = {
 // UUID namespace for consistently generating UUIDs from Outseta IDs
 // This is a random UUID that we'll use as our namespace
 const OUTSETA_NAMESPACE = "a3fb08d7-9c92-4cab-a863-c55771939cf6";
+
+// Helper function to encode bytes to hex string since encodeHex is not available
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
 
 // Custom implementation of UUID v5 since the import wasn't working
 function generateUUIDv5(name: string, namespace: string): string {
@@ -47,7 +53,7 @@ function generateUUIDv5(name: string, namespace: string): string {
   hashArray[8] = (hashArray[8] & 0x3f) | 0x80; // RFC4122 variant
   
   // Convert to UUID string format
-  const hex = encodeHex(hashArray.slice(0, 16));
+  const hex = bytesToHex(hashArray.slice(0, 16));
   return [
     hex.substring(0, 8),
     hex.substring(8, 12),
