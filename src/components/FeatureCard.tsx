@@ -2,7 +2,7 @@
 import React from 'react';
 import { Feature } from '@/utils/types';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Clock, ThumbsUp } from 'lucide-react';
+import { CheckCircle2, Clock, ThumbsDown, ThumbsUp } from 'lucide-react';
 
 interface FeatureCardProps {
   feature: Feature;
@@ -44,24 +44,40 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
       
       <div className="mt-auto flex items-center justify-between pt-3 border-t border-border">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => onVote(feature.id, true)}
-            className={cn(
-              "p-2 rounded-full transition-colors",
-              hasVoted 
-                ? "bg-primary/20 text-primary" 
-                : "hover:bg-primary/10 text-primary/70"
-            )}
-            aria-label={hasVoted ? "Remove vote" : "Vote for this feature"}
-            title={hasVoted ? "Remove vote" : "Vote for this feature"}
-          >
-            <ThumbsUp 
+          <div className="flex gap-1">
+            <button 
+              onClick={() => onVote(feature.id, true)}
               className={cn(
-                "w-5 h-5",
-                hasVoted && "fill-primary"
-              )} 
-            />
-          </button>
+                "p-2 rounded-full transition-colors",
+                hasVoted 
+                  ? "bg-primary/20 text-primary" 
+                  : "hover:bg-primary/10 text-primary/70"
+              )}
+              aria-label="Upvote this feature"
+              title="Upvote this feature"
+            >
+              <ThumbsUp 
+                className={cn(
+                  "w-5 h-5",
+                  hasVoted && "fill-primary"
+                )} 
+              />
+            </button>
+            
+            <button 
+              onClick={() => onVote(feature.id, false)}
+              className={cn(
+                "p-2 rounded-full transition-colors",
+                !hasVoted 
+                  ? "hover:bg-destructive/10 text-destructive/70" 
+                  : "text-foreground/40"
+              )}
+              aria-label="Downvote this feature"
+              title="Remove your vote"
+            >
+              <ThumbsDown className="w-5 h-5" />
+            </button>
+          </div>
           
           <span className="font-semibold text-sm">{feature.votes}</span>
         </div>
