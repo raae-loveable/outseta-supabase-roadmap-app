@@ -2,7 +2,9 @@
 import React from 'react';
 import { Feature } from '@/utils/types';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Clock, ThumbsUp } from 'lucide-react';
+import { CheckCircle2, Clock } from 'lucide-react';
+import { HandThumbUpIcon as ThumbUpSolid } from '@heroicons/react/24/solid';
+import { HandThumbUpIcon as ThumbUpOutline } from '@heroicons/react/24/outline';
 
 interface FeatureCardProps {
   feature: Feature;
@@ -55,11 +57,11 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
             aria-label={hasVoted ? "Remove vote" : "Vote for this feature"}
             title={hasVoted ? "Remove vote" : "Vote for this feature"}
           >
-            <ThumbsUp 
-              className="w-5 h-5"
-              fill={hasVoted ? "currentColor" : "none"}
-              strokeWidth={hasVoted ? 3 : 2}  
-            />
+            {hasVoted ? (
+              <ThumbUpSolid className="w-5 h-5" />
+            ) : (
+              <ThumbUpOutline className="w-5 h-5" />
+            )}
           </button>
           
           <span className="font-semibold text-sm">{feature.votes}</span>
