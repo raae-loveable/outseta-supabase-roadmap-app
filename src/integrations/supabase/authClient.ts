@@ -16,18 +16,22 @@ export const exchangeOutsetaToken = async (outsetaToken: string) => {
   try {
     console.log("Exchanging Outseta token for Supabase token");
     
-    // Use the Supabase SDK's built-in function invoke method instead of raw fetch
-    const { data, error } = await supabaseAuth.functions.invoke('outseta-auth', {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/outseta-auth`, {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${outsetaToken}`
-      }
+      },
+      body: JSON.stringify({})
     });
     
-    if (error) {
-      console.error("Token exchange failed:", error);
-      throw new Error(`Token exchange failed: ${error.message || error}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Token exchange failed:", errorData);
+      throw new Error(`Token exchange failed: ${errorData.error || response.statusText}`);
     }
     
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error("Token exchange error:", error);
