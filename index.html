@@ -13,6 +13,8 @@
     <script>
       var o_options = {
         domain: "snippets.outseta.com",
+        tokenStorage: "local",
+        // Must do for SPAs
         monitorDom: "true",
         load: "auth,profile,nocode,leadCapture,support,emailList",
         auth: {
@@ -23,7 +25,6 @@
           registrationConfirmationUrl: window.location.origin,
         },
         nocode: {
-          hideProtectedLinks: false,
           // Nice to do in a SPA
           clearQuerystring: true,
         },
