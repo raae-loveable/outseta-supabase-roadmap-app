@@ -1,13 +1,31 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseAuth } from '@/integrations/supabase/authClient';
 import { Feature, FeatureStatus, FeatureRequestInput } from '@/utils/types';
 import { toast } from '@/components/ui/use-toast';
+
+// Get the appropriate Supabase client based on authentication status
+const getSupabaseClient = () => {
+  // Check if we have a valid session in the auth client
+  const session = supabaseAuth.auth.session();
+  
+  // If we have a valid session, use the authenticated client
+  if (session) {
+    console.log("Using authenticated Supabase client");
+    return supabaseAuth;
+  }
+  
+  // Otherwise, use the default client
+  console.log("Using default Supabase client");
+  return supabase;
+};
 
 // Fetch features from Supabase
 export const fetchFeaturesFromSupabase = async (userId?: string) => {
   try {
+    const client = getSupabaseClient();
+    
     // Get all features
-    const { data: featuresData, error: featuresError } = await supabase
+    const { data: featuresData, error: featuresError } = await client
       .from('features')
       .select('*');
     
@@ -17,7 +35,7 @@ export const fetchFeaturesFromSupabase = async (userId?: string) => {
     let userVotes: Record<string, boolean> = {};
     
     if (userId) {
-      const { data: votesData, error: votesError } = await supabase
+      const { data: votesData, error: votesError } = await client
         .from('feature_votes')
         .select('feature_id')
         .eq('user_id', userId);
@@ -52,7 +70,9 @@ export const fetchFeaturesFromSupabase = async (userId?: string) => {
 // Add a new feature to Supabase
 export const addFeatureToSupabase = async (input: FeatureRequestInput, userId: string) => {
   try {
-    const { data, error } = await supabase
+    const client = getSupabaseClient();
+    
+    const { data, error } = await client
       .from('features')
       .insert([{
         title: input.title,
@@ -86,8 +106,10 @@ export const addFeatureToSupabase = async (input: FeatureRequestInput, userId: s
 // Update votes for a feature
 export const updateFeatureVotes = async (id: string, userId: string, increment: boolean) => {
   try {
+    const client = getSupabaseClient();
+    
     // Check if user has already voted
-    const { data: existingVote, error: checkError } = await supabase
+    const { data: existingVote, error: checkError } = await client
       .from('feature_votes')
       .select('id')
       .eq('feature_id', id)
@@ -99,7 +121,7 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
     // If user has already voted and wants to remove vote
     if (existingVote) {
       // Remove the vote from feature_votes table
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await client
         .from('feature_votes')
         .delete()
         .eq('id', existingVote.id);
@@ -108,7 +130,7 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       
       // Decrement the votes count in features table
       // Use explicit type assertion to bypass TypeScript error
-      const { error: updateError } = await supabase.rpc(
+      const { error: updateError } = await client.rpc(
         'decrement', 
         { x: 1, row_id: id } as unknown as Record<string, unknown>
       );
@@ -118,7 +140,7 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       return { action: 'removed', error: null };
     } else {
       // User hasn't voted, so add a vote
-      const { error: insertError } = await supabase
+      const { error: insertError } = await client
         .from('feature_votes')
         .insert([{
           feature_id: id,
@@ -129,7 +151,7 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       
       // Increment the votes count in features table
       // Use explicit type assertion to bypass TypeScript error
-      const { error: updateError } = await supabase.rpc(
+      const { error: updateError } = await client.rpc(
         'increment', 
         { x: 1, row_id: id } as unknown as Record<string, unknown>
       );

@@ -1,3 +1,4 @@
+
 // Types for the Outseta global object
 declare global {
   interface Window {
@@ -45,14 +46,19 @@ export const getAuthPayload = () => {
   return null;
 };
 
+// Get the Outseta access token
 export const getAccessToken = async (): Promise<string | null> => {
   if (window.Outseta) {
     try {
       const token = await window.Outseta.getAccessToken();
-      console.log("Access token available:", !!token);
+      if (token) {
+        console.log("Outseta access token available");
+      } else {
+        console.warn("Outseta access token not available");
+      }
       return token;
     } catch (error) {
-      console.error("Error getting access token:", error);
+      console.error("Error getting Outseta access token:", error);
       return null;
     }
   }

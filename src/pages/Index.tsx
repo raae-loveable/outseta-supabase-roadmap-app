@@ -8,6 +8,8 @@ import { registerOutsetaEvents } from '@/utils/outseta';
 import { useOutsetaAuth } from '@/hooks/useOutsetaAuth';
 import { useSupabaseFeatures } from '@/hooks/useSupabaseFeatures';
 import { toast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { InfoCircledIcon } from '@radix-ui/react-icons';
 
 const Index = () => {
   const {
@@ -22,8 +24,8 @@ const Index = () => {
     setSortBy,
   } = useSupabaseFeatures();
   
-  // Use our Outseta auth hook
-  const { user, loading: authLoading } = useOutsetaAuth();
+  // Use our Outseta auth hook with token exchange
+  const { user, loading: authLoading, tokenExchangeError, supabaseToken } = useOutsetaAuth();
   const isLoggedIn = !!user;
 
   // Register Outseta events when component mounts
@@ -57,11 +59,37 @@ const Index = () => {
     };
   }, []);
 
+  // Display a toast when token exchange status changes
+  useEffect(() => {
+    if (user && supabaseToken) {
+      toast({
+        title: "Authentication Complete",
+        description: "Your Outseta account is now connected to Supabase.",
+      });
+    } else if (tokenExchangeError) {
+      toast({
+        title: "Authentication Error",
+        description: tokenExchangeError,
+        variant: "destructive",
+      });
+    }
+  }, [user, supabaseToken, tokenExchangeError]);
+
   const handleFeatureSubmit = (data: any) => {
     if (!user) {
       toast({
         title: "Authentication required",
         description: "Please sign in to submit a feature request.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if Supabase token is available
+    if (!supabaseToken) {
+      toast({
+        title: "Authentication incomplete",
+        description: "Your Supabase authentication is not complete. Please try again.",
         variant: "destructive",
       });
       return;
@@ -90,7 +118,17 @@ const Index = () => {
       return;
     }
     
-    // User exists, proceed with vote
+    // Check if Supabase token is available
+    if (!supabaseToken) {
+      toast({
+        title: "Authentication incomplete",
+        description: "Your Supabase authentication is not complete. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // User exists and has Supabase token, proceed with vote
     console.log("Voting with user ID:", user.uid);
     updateVotes(featureId, increment);
   };
@@ -101,6 +139,20 @@ const Index = () => {
       
       <main>
         <Hero />
+        
+        {tokenExchangeError && isLoggedIn && (
+          <div className="container mx-auto mt-4 px-4">
+            <Alert variant="destructive">
+              <InfoCircledIcon className="h-4 w-4" />
+              <AlertTitle>Authentication Error</AlertTitle>
+              <AlertDescription>
+                There was an error connecting your Outseta account to Supabase: {tokenExchangeError}
+                <br />
+                Some features may not work properly. Please try logging out and back in.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
         
         <RoadmapSection
           features={features}
