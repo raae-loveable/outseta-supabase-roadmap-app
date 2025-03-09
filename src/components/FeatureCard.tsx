@@ -47,20 +47,15 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
           <button 
             onClick={() => onVote(feature.id, true)}
             className={cn(
-              "p-2 rounded-full transition-colors",
+              "p-2 rounded-full transition-colors duration-200",
               hasVoted 
-                ? "bg-primary/20 text-primary" 
+                ? "bg-primary text-primary-foreground" 
                 : "hover:bg-primary/10 text-primary/70"
             )}
             aria-label={hasVoted ? "Remove vote" : "Vote for this feature"}
             title={hasVoted ? "Remove vote" : "Vote for this feature"}
           >
-            <ThumbsUp 
-              className={cn(
-                "w-5 h-5",
-                hasVoted && "fill-primary"
-              )} 
-            />
+            <ThumbsUp className="w-5 h-5" />
           </button>
           
           <span className="font-semibold text-sm">{feature.votes}</span>
