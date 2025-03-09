@@ -23,7 +23,7 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
   const StatusIcon = statusConfig[feature.status].icon;
   
   // Check if the current user has voted on this feature
-  const hasVoted = userId ? feature.votedBy.has(userId) : false;
+  const hasVoted = userId && feature.votedBy && feature.votedBy.has(userId);
   
   return (
     <div 
@@ -45,7 +45,7 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
       <div className="mt-auto flex items-center justify-between pt-3 border-t border-border">
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => onVote(feature.id, true)}
+            onClick={() => onVote(feature.id, !hasVoted)}
             className={cn(
               "p-2 rounded-full transition-colors duration-200",
               hasVoted 
