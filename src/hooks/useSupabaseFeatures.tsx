@@ -19,15 +19,22 @@ export function useSupabaseFeatures() {
   const [isLoading, setIsLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<FeatureStatus | 'all'>('all');
   const [sortBy, setSortBy] = useState<'votes' | 'newest'>('votes');
-  const { user, supabaseClient } = useOutsetaAuth();
+  const { user, supabaseClient, loading: authLoading } = useOutsetaAuth();
   
   // Calculate feature counts
   const featureCounts = calculateFeatureCounts(features);
 
   // Fetch features from Supabase
   const fetchFeatures = useCallback(async () => {
+    // Skip fetching if auth is still loading or if supabaseClient isn't available
+    if (authLoading || !supabaseClient) {
+      console.log('Skipping feature fetch - auth loading or no supabase client');
+      return;
+    }
+    
     try {
       setIsLoading(true);
+      console.log('Fetching features with user ID:', user?.uid);
       const { features: fetchedFeatures, error } = await fetchFeaturesFromSupabase(
         user?.uid, 
         supabaseClient
@@ -47,7 +54,7 @@ export function useSupabaseFeatures() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, supabaseClient]);
+  }, [user, supabaseClient, authLoading]);
 
   // Add a new feature
   const addFeature = useCallback(async (input: FeatureRequestInput) => {
@@ -174,15 +181,18 @@ export function useSupabaseFeatures() {
     return sortFeatures(filtered, sortBy);
   }, [features, filterStatus, sortBy]);
 
-  // Fetch features on component mount and when user changes
+  // Fetch features when authentication is ready and when user or supabaseClient changes
   useEffect(() => {
-    fetchFeatures();
-  }, [fetchFeatures]);
+    if (!authLoading) {
+      console.log('Auth state ready, fetching features');
+      fetchFeatures();
+    }
+  }, [fetchFeatures, authLoading]);
 
   return {
     features: filteredAndSortedFeatures(),
     featureCounts,
-    isLoading,
+    isLoading: isLoading || authLoading, // Consider auth loading as part of feature loading
     addFeature,
     updateVotes,
     filterStatus,

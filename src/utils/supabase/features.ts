@@ -5,6 +5,12 @@ import { Feature, FeatureStatus } from '../types';
 // Fetch features from Supabase
 export const getFeatures = async (userId?: string, customClient = supabase) => {
   try {
+    // Guard against null or undefined client
+    if (!customClient) {
+      console.error('No Supabase client provided');
+      return [];
+    }
+    
     console.log('Fetching features from Supabase');
     let { data: features, error } = await customClient
       .from('features')
