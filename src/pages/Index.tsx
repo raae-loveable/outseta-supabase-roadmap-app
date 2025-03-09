@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { RoadmapSection } from '@/components/RoadmapSection';
 import { SubmitFeatureForm } from '@/components/SubmitFeatureForm';
 import { useFeatures } from '@/hooks/useFeatures';
-import { getCurrentUser, registerOutsetaEvents, checkInitialAuthState } from '@/utils/outseta';
+import { registerOutsetaEvents, checkInitialAuthState } from '@/utils/outseta';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
@@ -32,13 +31,13 @@ const Index = () => {
         // Register event listeners for auth changes
         registerOutsetaEvents();
         
-        // Check initial authentication state
-        const { isLoggedIn, user } = await checkInitialAuthState();
+        // Check initial authentication state using JWT payload
+        const { isLoggedIn, userId } = await checkInitialAuthState();
         setIsLoggedIn(isLoggedIn);
         
-        if (user) {
-          setUserId(user.uid);
-          console.log("User is logged in with ID:", user.uid);
+        if (userId) {
+          setUserId(userId);
+          console.log("User is logged in with ID:", userId);
         }
         
         setIsInitialized(true);
@@ -50,10 +49,15 @@ const Index = () => {
   
   // Listen for auth events
   useEffect(() => {
-    const handleAuthUpdate = async (event: CustomEvent) => {
+    const handleAuthUpdate = (event: CustomEvent) => {
       console.log("Auth event received:", event.detail);
       
       const action = event.detail?.action;
+      const isLoggedIn = event.detail?.isLoggedIn;
+      const userId = event.detail?.userId || event.detail?.jwtPayload?.uid;
+      
+      // Update authentication state
+      setIsLoggedIn(!!isLoggedIn);
       
       if (action === 'logout') {
         setIsLoggedIn(false);
@@ -65,27 +69,14 @@ const Index = () => {
         return;
       }
       
-      // For login or token updates, check the user
-      const token = await window.Outseta?.getAccessToken();
-      const hasToken = !!token;
-      
-      setIsLoggedIn(hasToken);
-      
-      if (hasToken) {
-        try {
-          const user = await getCurrentUser();
-          if (user) {
-            setUserId(user.uid);
-            console.log("Updated user ID after auth event:", user.uid);
-            
-            toast({
-              title: "Authentication updated",
-              description: "You are now logged in.",
-            });
-          }
-        } catch (error) {
-          console.error("Error fetching user data after auth event:", error);
-        }
+      if (isLoggedIn && userId) {
+        setUserId(userId);
+        console.log("Updated user ID after auth event:", userId);
+        
+        toast({
+          title: "Authentication updated",
+          description: "You are now logged in.",
+        });
       }
     };
     
@@ -157,32 +148,17 @@ const Index = () => {
     
     // Check if we have a user ID
     if (!userId) {
-      try {
-        const user = await getCurrentUser();
-        if (user) {
-          setUserId(user.uid);
-          // User is confirmed to be logged in, proceed with vote
-          updateVotes(featureId, increment, user.uid);
-        } else {
-          toast({
-            title: "User data error",
-            description: "Could not retrieve your user information. Please try again.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Error getting user data for voting:", error);
-        toast({
-          title: "Error",
-          description: "An error occurred while trying to vote. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // We have the user ID, proceed with vote
-      console.log("Voting with user ID:", userId);
-      updateVotes(featureId, increment, userId);
+      toast({
+        title: "User data error",
+        description: "Could not retrieve your user information. Please try again.",
+        variant: "destructive",
+      });
+      return;
     }
+    
+    // We have the user ID, proceed with vote
+    console.log("Voting with user ID:", userId);
+    updateVotes(featureId, increment, userId);
   };
 
   return (

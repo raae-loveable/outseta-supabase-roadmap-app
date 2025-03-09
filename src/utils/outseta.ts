@@ -5,6 +5,7 @@ declare global {
     Outseta?: {
       getUser: () => Promise<any>;
       getAccessToken: () => Promise<string | null>;
+      getJwtPayload: () => Promise<any>;
       on: (event: string, callback: (data: any) => void) => void;
       auth: {
         open: (options: { widgetMode: string }) => void;
@@ -31,14 +32,15 @@ export const openOutsetaSignUp = () => {
   }
 };
 
-export const getCurrentUser = async () => {
+// Get the decoded JWT payload directly
+export const getAuthPayload = async () => {
   if (window.Outseta) {
     try {
-      const user = await window.Outseta.getUser();
-      console.log("Current user from Outseta:", user);
-      return user;
+      const payload = await window.Outseta.getJwtPayload();
+      console.log("JWT payload from Outseta:", payload);
+      return payload;
     } catch (error) {
-      console.error("Error getting current user:", error);
+      console.error("Error getting JWT payload:", error);
       return null;
     }
   }
@@ -72,24 +74,27 @@ export const registerOutsetaEvents = () => {
   console.log("Registering Outseta events...");
   
   if (window.Outseta) {
-    // Listen for access token changes
-    window.Outseta.on('accessToken.set', (token) => {
-      console.log("Outseta accessToken.set event triggered", !!token);
+    // Listen for access token changes - this includes the JWT payload
+    window.Outseta.on('accessToken.set', (jwtPayload) => {
+      console.log("Outseta accessToken.set event triggered with JWT payload:", jwtPayload);
+      
+      // The JWT payload contains user information directly
+      const userId = jwtPayload?.uid;
       
       // Dispatch a custom event that our app can listen for
       const event = new CustomEvent('outseta:auth:updated', { 
-        detail: { token, action: 'token_updated' } 
+        detail: { jwtPayload, action: 'token_updated', isLoggedIn: !!userId, userId }
       });
       window.dispatchEvent(event);
     });
     
-    // Listen for user login
+    // Listen for user login - redundant with accessToken.set but kept for completeness
     window.Outseta.on('login', (data) => {
       console.log("Outseta login event triggered", data);
       
       // Dispatch a custom event for login
       const event = new CustomEvent('outseta:auth:updated', { 
-        detail: { action: 'login', data } 
+        detail: { action: 'login', data, isLoggedIn: true }
       });
       window.dispatchEvent(event);
     });
@@ -100,7 +105,7 @@ export const registerOutsetaEvents = () => {
       
       // Dispatch a custom event for logout
       const event = new CustomEvent('outseta:auth:updated', { 
-        detail: { action: 'logout' } 
+        detail: { action: 'logout', isLoggedIn: false, userId: null }
       });
       window.dispatchEvent(event);
     });
@@ -120,20 +125,20 @@ export const registerOutsetaEvents = () => {
 
 // Helper to check authentication state on page load
 export const checkInitialAuthState = async () => {
-  console.log("Checking initial auth state...");
+  console.log("Checking initial auth state using JWT payload...");
   
   try {
-    const token = await getAccessToken();
-    if (token) {
-      const user = await getCurrentUser();
-      console.log("Initial auth check: User is logged in", user?.uid);
-      return { isLoggedIn: true, user };
+    const jwtPayload = await getAuthPayload();
+    if (jwtPayload) {
+      const userId = jwtPayload.uid;
+      console.log("Initial auth check: User is logged in with ID:", userId);
+      return { isLoggedIn: true, user: jwtPayload, userId };
     } else {
-      console.log("Initial auth check: User is not logged in");
-      return { isLoggedIn: false, user: null };
+      console.log("Initial auth check: User is not logged in (no JWT payload)");
+      return { isLoggedIn: false, user: null, userId: null };
     }
   } catch (error) {
     console.error("Error in initial auth check:", error);
-    return { isLoggedIn: false, user: null };
+    return { isLoggedIn: false, user: null, userId: null };
   }
 };
