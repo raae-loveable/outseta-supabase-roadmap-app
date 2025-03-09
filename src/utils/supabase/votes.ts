@@ -1,10 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// Define the types for our RPC functions
-type IncrementVotesParams = { feature_id: string };
-type DecrementVotesParams = { feature_id: string };
-
 // Vote for a feature in Supabase
 export const voteForFeature = async (
   featureId: string,
@@ -43,8 +39,11 @@ export const voteForFeature = async (
       }
 
       // Increment the votes count in the features table
+      // Use direct update for vote count rather than RPC
       const { error: updateError } = await supabase
-        .rpc('increment_votes', { feature_id: featureId } as IncrementVotesParams);
+        .from('features')
+        .update({ votes: supabase.rpc('increment', { votes: 1 }) })
+        .eq('id', featureId);
       
       if (updateError) {
         console.error('Error incrementing votes:', updateError);
@@ -66,8 +65,11 @@ export const voteForFeature = async (
       }
 
       // Decrement the votes count in the features table
+      // Use direct update for vote count rather than RPC
       const { error: updateError } = await supabase
-        .rpc('decrement_votes', { feature_id: featureId } as DecrementVotesParams);
+        .from('features')
+        .update({ votes: supabase.rpc('decrement', { votes: 1 }) })
+        .eq('id', featureId);
       
       if (updateError) {
         console.error('Error decrementing votes:', updateError);
