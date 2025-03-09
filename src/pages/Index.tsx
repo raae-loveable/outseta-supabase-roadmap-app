@@ -5,7 +5,7 @@ import { Hero } from '@/components/Hero';
 import { RoadmapSection } from '@/components/RoadmapSection';
 import { SubmitFeatureForm } from '@/components/SubmitFeatureForm';
 import { useFeatures } from '@/hooks/useFeatures';
-import { getCurrentUser } from '@/utils/outseta';
+import { getCurrentUser, registerOutsetaEvents, checkInitialAuthState } from '@/utils/outseta';
 import { toast } from '@/components/ui/use-toast';
 
 const Index = () => {
@@ -22,60 +22,79 @@ const Index = () => {
   
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string>('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Initialize Outseta events and check initial auth state
   useEffect(() => {
-    // Check for window.Outseta before using it
-    if (typeof window !== 'undefined' && window.Outseta) {
-      // Add event listener for Outseta auth changes
-      window.Outseta.on('accessToken.set', async (decodedToken) => {
-        setIsLoggedIn(Boolean(decodedToken));
+    const initializeOutseta = async () => {
+      // Check if Outseta is available in the window object
+      if (typeof window !== 'undefined') {
+        // Register event listeners for auth changes
+        registerOutsetaEvents();
         
-        // Get user ID when logged in
-        if (decodedToken) {
-          try {
-            const user = await getCurrentUser();
-            if (user) {
-              setUserId(user.uid);
-            }
-          } catch (error) {
-            console.error("Error fetching user data:", error);
-          }
-        } else {
-          setUserId('');
+        // Check initial authentication state
+        const { isLoggedIn, user } = await checkInitialAuthState();
+        setIsLoggedIn(isLoggedIn);
+        
+        if (user) {
+          setUserId(user.uid);
+          console.log("User is logged in with ID:", user.uid);
         }
         
-        toast({
-          title: "Authentication status updated",
-          description: "Your login status has been updated.",
-        });
-      });
-      
-      // Check current authentication status on load
-      checkAuthStatus();
-    } else {
-      console.warn('Outseta is not initialized yet. Authentication features may not work properly.');
-    }
+        setIsInitialized(true);
+      }
+    };
+    
+    initializeOutseta();
   }, []);
   
-  const checkAuthStatus = async () => {
-    try {
-      if (window.Outseta) {
-        const accessToken = await window.Outseta.getAccessToken();
-        setIsLoggedIn(Boolean(accessToken));
-        
-        // Get user ID if logged in
-        if (accessToken) {
+  // Listen for auth events
+  useEffect(() => {
+    const handleAuthUpdate = async (event: CustomEvent) => {
+      console.log("Auth event received:", event.detail);
+      
+      const action = event.detail?.action;
+      
+      if (action === 'logout') {
+        setIsLoggedIn(false);
+        setUserId('');
+        toast({
+          title: "Logged out",
+          description: "You have been logged out successfully.",
+        });
+        return;
+      }
+      
+      // For login or token updates, check the user
+      const token = await window.Outseta?.getAccessToken();
+      const hasToken = !!token;
+      
+      setIsLoggedIn(hasToken);
+      
+      if (hasToken) {
+        try {
           const user = await getCurrentUser();
           if (user) {
             setUserId(user.uid);
+            console.log("Updated user ID after auth event:", user.uid);
+            
+            toast({
+              title: "Authentication updated",
+              description: "You are now logged in.",
+            });
           }
+        } catch (error) {
+          console.error("Error fetching user data after auth event:", error);
         }
       }
-    } catch (error) {
-      console.error("Error checking authentication status:", error);
-      setIsLoggedIn(false);
-    }
-  };
+    };
+    
+    window.addEventListener('outseta:auth:updated', handleAuthUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('outseta:auth:updated', handleAuthUpdate as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     // Observer for the animation of elements as they appear in the viewport
@@ -117,37 +136,52 @@ const Index = () => {
   };
 
   const handleVote = async (featureId: string, increment: boolean) => {
-    // Double-check authentication status before allowing vote
-    if (window.Outseta) {
-      const accessToken = await window.Outseta.getAccessToken();
-      
-      if (!accessToken) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to vote for features.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Ensure we have a userId
-      if (!userId) {
+    // Check if we've fully initialized
+    if (!isInitialized) {
+      toast({
+        title: "Please wait",
+        description: "System is still initializing.",
+      });
+      return;
+    }
+    
+    // Check authentication
+    if (!isLoggedIn) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to vote for features.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check if we have a user ID
+    if (!userId) {
+      try {
         const user = await getCurrentUser();
         if (user) {
           setUserId(user.uid);
           // User is confirmed to be logged in, proceed with vote
           updateVotes(featureId, increment, user.uid);
+        } else {
+          toast({
+            title: "User data error",
+            description: "Could not retrieve your user information. Please try again.",
+            variant: "destructive",
+          });
         }
-      } else {
-        // User is confirmed to be logged in and we have the userId, proceed with vote
-        updateVotes(featureId, increment, userId);
+      } catch (error) {
+        console.error("Error getting user data for voting:", error);
+        toast({
+          title: "Error",
+          description: "An error occurred while trying to vote. Please try again.",
+          variant: "destructive",
+        });
       }
     } else {
-      toast({
-        title: "Authentication error",
-        description: "Unable to verify authentication. Please try again later.",
-        variant: "destructive",
-      });
+      // We have the user ID, proceed with vote
+      console.log("Voting with user ID:", userId);
+      updateVotes(featureId, increment, userId);
     }
   };
 
@@ -167,7 +201,7 @@ const Index = () => {
           sortBy={sortBy}
           setSortBy={setSortBy}
           isLoggedIn={isLoggedIn}
-          userId={userId} // Pass userId to RoadmapSection
+          userId={userId}
         />
         
         <SubmitFeatureForm onSubmit={handleFeatureSubmit} isLoggedIn={isLoggedIn} />
