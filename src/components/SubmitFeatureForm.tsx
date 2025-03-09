@@ -35,7 +35,7 @@ export function SubmitFeatureForm({ onSubmit, isLoggedIn, className }: SubmitFea
     <section
       id="submit"
       className={cn(
-        "py-24 px-4 bg-accent/50",
+        "py-24 px-4 bg-gradient-to-b from-purple-50 to-yellow-50",
         className
       )}
     >
