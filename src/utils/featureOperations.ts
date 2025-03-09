@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { supabaseAuth } from '@/integrations/supabase/authClient';
 import { Feature, FeatureStatus, FeatureRequestInput } from '@/utils/types';
@@ -127,10 +126,9 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       if (deleteError) throw deleteError;
       
       // Decrement the votes count in features table
-      // Fix the type assertion
       const { error: updateError } = await client.rpc(
         'decrement', 
-        { x: 1, row_id: id }
+        { row_id: id, x: 1 }
       );
       
       if (updateError) throw updateError;
@@ -148,10 +146,9 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       if (insertError) throw insertError;
       
       // Increment the votes count in features table
-      // Fix the type assertion
       const { error: updateError } = await client.rpc(
         'increment', 
-        { x: 1, row_id: id }
+        { row_id: id, x: 1 }
       );
       
       if (updateError) throw updateError;
