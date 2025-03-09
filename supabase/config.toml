@@ -27,3 +27,4 @@ enabled = true
 [functions]
 [functions.outseta-auth]
 verify_jwt = false
+
