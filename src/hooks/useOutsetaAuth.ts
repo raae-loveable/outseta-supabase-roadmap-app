@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { OutsetaUser } from '@/utils/types';
-import { getAccessToken } from '@/utils/outseta';
+import { getAccessToken, getAuthPayload } from '@/utils/outseta';
 import { exchangeOutsetaToken, createSupabaseClientWithToken, clearSupabaseSession } from '@/integrations/supabase/authClient';
+import { getUserFromJWTPayload } from '@/utils/supabase';
 
 export function useOutsetaAuth() {
   const [user, setUser] = useState<OutsetaUser | null>(null);
@@ -10,23 +11,26 @@ export function useOutsetaAuth() {
   const [supabaseToken, setSupabaseToken] = useState<string | null>(null);
   const [supabaseClient, setSupabaseClient] = useState<any>(null);
   const [tokenExchangeError, setTokenExchangeError] = useState<string | null>(null);
+  const [jwtPayload, setJwtPayload] = useState<any>(null);
 
   // Function to directly get the current auth state and exchange tokens
   const refreshAuthState = async () => {
     if (window.Outseta) {
       try {
-        const jwtPayload = window.Outseta.getJwtPayload();
+        // Get JWT payload directly from Outseta
+        const payload = window.Outseta.getJwtPayload();
+        setJwtPayload(payload);
         
-        if (jwtPayload) {
-          const userId = jwtPayload.sub || jwtPayload.nameid;
+        if (payload) {
+          const userId = payload.sub || payload.nameid;
           
           // Set the user data from Outseta
           const outsetaUser = {
             uid: userId,
-            email: jwtPayload.email,
-            firstName: jwtPayload.given_name,
-            lastName: jwtPayload.family_name,
-            fullName: jwtPayload.name
+            email: payload.email,
+            firstName: payload.given_name,
+            lastName: payload.family_name,
+            fullName: payload.name
           };
           
           setUser(outsetaUser);
@@ -68,6 +72,7 @@ export function useOutsetaAuth() {
           setUser(null);
           setSupabaseToken(null);
           setSupabaseClient(null);
+          setJwtPayload(null);
           
           // Clear the Supabase session
           await clearSupabaseSession();
@@ -79,6 +84,7 @@ export function useOutsetaAuth() {
         setUser(null);
         setSupabaseToken(null);
         setSupabaseClient(null);
+        setJwtPayload(null);
         setTokenExchangeError(`Error refreshing auth state: ${error.message}`);
       }
       
@@ -111,6 +117,7 @@ export function useOutsetaAuth() {
     refreshAuthState,
     supabaseToken,
     supabaseClient,
-    tokenExchangeError
+    tokenExchangeError,
+    jwtPayload
   };
 }

@@ -24,7 +24,15 @@ const Index = () => {
     setSortBy,
   } = useSupabaseFeatures();
   
-  const { user, loading: authLoading, tokenExchangeError, supabaseToken } = useOutsetaAuth();
+  const { 
+    user, 
+    loading: authLoading, 
+    tokenExchangeError, 
+    supabaseToken, 
+    supabaseClient,
+    jwtPayload 
+  } = useOutsetaAuth();
+  
   const isLoggedIn = !!user;
 
   useEffect(() => {
@@ -55,7 +63,7 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (user && supabaseToken) {
+    if (user && supabaseToken && supabaseClient) {
       toast({
         title: "Authentication Complete",
         description: "Your Outseta account is now connected to Supabase.",
@@ -67,7 +75,7 @@ const Index = () => {
         variant: "destructive",
       });
     }
-  }, [user, supabaseToken, tokenExchangeError]);
+  }, [user, supabaseToken, supabaseClient, tokenExchangeError]);
 
   const handleFeatureSubmit = (data: any) => {
     if (!user) {
@@ -79,7 +87,7 @@ const Index = () => {
       return;
     }
     
-    if (!supabaseToken) {
+    if (!supabaseClient) {
       toast({
         title: "Authentication incomplete",
         description: "Your Supabase authentication is not complete. Please try again.",
@@ -109,7 +117,7 @@ const Index = () => {
       return;
     }
     
-    if (!supabaseToken) {
+    if (!supabaseClient) {
       toast({
         title: "Authentication incomplete",
         description: "Your Supabase authentication is not complete. Please try again.",
