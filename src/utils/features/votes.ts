@@ -1,13 +1,25 @@
 
-import { voteForFeature } from '../supabase';
+import { voteForFeature } from '../supabase/votes';
 
-// Update feature votes in Supabase
-export const updateFeatureVotes = async (id: string, userId: string, increment: boolean) => {
+// Update votes for a feature in Supabase
+export const updateFeatureVotes = async (
+  featureId: string,
+  userId: string,
+  increment: boolean
+) => {
   try {
-    const result = await voteForFeature(id, userId, increment);
-    return result;
+    console.log('Updating votes for feature:', { featureId, userId, increment });
+    
+    const result = await voteForFeature(featureId, userId, increment);
+    
+    if ('error' in result) {
+      console.error('Error updating votes:', result.error);
+      return { error: result.error };
+    }
+    
+    return { action: result.action };
   } catch (error) {
-    console.error('Error updating feature votes in Supabase:', error);
+    console.error('Error in updateFeatureVotes:', error);
     return { error };
   }
 };
