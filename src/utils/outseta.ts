@@ -69,43 +69,28 @@ export const logoutUser = () => {
   }
 };
 
-// Enhanced Outseta event handling
+// Simplified Outseta event handling
 export const registerOutsetaEvents = () => {
   console.log("Registering Outseta events...");
   
   if (window.Outseta) {
-    // Listen for access token changes - this includes the JWT payload
+    // Listen only for access token changes - this includes the JWT payload
+    // This event handles both login and logout scenarios
     window.Outseta.on('accessToken.set', (jwtPayload) => {
       console.log("Outseta accessToken.set event triggered with JWT payload:", jwtPayload);
       
-      // The JWT payload contains user information directly
-      const userId = jwtPayload?.uid;
+      // Check if jwtPayload exists (login) or is undefined (logout)
+      const isLoggedIn = !!jwtPayload;
+      const userId = jwtPayload?.uid || null;
       
       // Dispatch a custom event that our app can listen for
       const event = new CustomEvent('outseta:auth:updated', { 
-        detail: { jwtPayload, action: 'token_updated', isLoggedIn: !!userId, userId }
-      });
-      window.dispatchEvent(event);
-    });
-    
-    // Listen for user login - redundant with accessToken.set but kept for completeness
-    window.Outseta.on('login', (data) => {
-      console.log("Outseta login event triggered", data);
-      
-      // Dispatch a custom event for login
-      const event = new CustomEvent('outseta:auth:updated', { 
-        detail: { action: 'login', data, isLoggedIn: true }
-      });
-      window.dispatchEvent(event);
-    });
-    
-    // Listen for user logout
-    window.Outseta.on('logout', () => {
-      console.log("Outseta logout event triggered");
-      
-      // Dispatch a custom event for logout
-      const event = new CustomEvent('outseta:auth:updated', { 
-        detail: { action: 'logout', isLoggedIn: false, userId: null }
+        detail: { 
+          jwtPayload, 
+          action: isLoggedIn ? 'login' : 'logout',
+          isLoggedIn,
+          userId
+        }
       });
       window.dispatchEvent(event);
     });

@@ -47,35 +47,33 @@ const Index = () => {
     initializeOutseta();
   }, []);
   
-  // Listen for auth events
+  // Listen for auth events - simplified to handle a single event type
   useEffect(() => {
     const handleAuthUpdate = (event: CustomEvent) => {
       console.log("Auth event received:", event.detail);
       
-      const action = event.detail?.action;
       const isLoggedIn = event.detail?.isLoggedIn;
       const userId = event.detail?.userId || event.detail?.jwtPayload?.uid;
       
       // Update authentication state
       setIsLoggedIn(!!isLoggedIn);
       
-      if (action === 'logout') {
-        setIsLoggedIn(false);
-        setUserId('');
-        toast({
-          title: "Logged out",
-          description: "You have been logged out successfully.",
-        });
-        return;
-      }
-      
       if (isLoggedIn && userId) {
         setUserId(userId);
         console.log("Updated user ID after auth event:", userId);
         
         toast({
-          title: "Authentication updated",
+          title: "Logged in",
           description: "You are now logged in.",
+        });
+      } else {
+        // Handle logout
+        setUserId('');
+        console.log("User logged out");
+        
+        toast({
+          title: "Logged out",
+          description: "You have been logged out successfully.",
         });
       }
     };
