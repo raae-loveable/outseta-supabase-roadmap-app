@@ -56,10 +56,8 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
             title={hasVoted ? "Remove vote" : "Vote for this feature"}
           >
             <ThumbsUp 
-              className={cn(
-                "w-5 h-5",
-                hasVoted && "fill-primary"
-              )} 
+              className="w-5 h-5"
+              fill={hasVoted ? "currentColor" : "none"}
             />
           </button>
           
