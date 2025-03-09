@@ -48,7 +48,8 @@ export const getFeatures = async (userId?: string) => {
       }));
     }
 
-    return features as Feature[] || [];
+    // Type assertion to ensure features conform to the Feature type
+    return (features || []) as Feature[];
   } catch (error) {
     console.error('Error in getFeatures:', error);
     throw error;

@@ -7,7 +7,7 @@ import {
   fetchFeaturesFromSupabase, 
   addFeatureToSupabase, 
   updateFeatureVotes 
-} from '@/utils/featureOperations';
+} from '@/utils/features';
 import {
   filterFeaturesByStatus,
   sortFeatures,
