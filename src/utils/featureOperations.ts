@@ -128,7 +128,7 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       // Decrement the votes count in features table
       const { error: updateError } = await client.rpc(
         'decrement', 
-        { row_id: id, x: 1 }
+        { row_id: id, x: 1 } as any
       );
       
       if (updateError) throw updateError;
@@ -148,7 +148,7 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       // Increment the votes count in features table
       const { error: updateError } = await client.rpc(
         'increment', 
-        { row_id: id, x: 1 }
+        { row_id: id, x: 1 } as any
       );
       
       if (updateError) throw updateError;
