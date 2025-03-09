@@ -7,6 +7,13 @@
 
 import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
 
+// Custom function to convert bytes to hex string since encodeHex is not available
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
