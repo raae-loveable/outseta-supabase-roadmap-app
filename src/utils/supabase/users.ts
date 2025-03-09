@@ -26,17 +26,18 @@ export const getUserProfile = async () => {
 };
 
 // Get user metadata from JWT
-export const getUserFromJWT = () => {
+export const getUserFromJWT = async () => {
   try {
-    // Check if we have an active auth object
-    const { data: authData } = supabaseAuth.auth.getUser();
+    // Get the user data by awaiting the promise
+    const { data: { user } } = await supabaseAuth.auth.getUser();
     
-    if (!authData) {
+    if (!user) {
+      console.log('No user found in JWT');
       return null;
     }
     
-    console.log('User from JWT:', authData);
-    return authData.user;
+    console.log('User from JWT:', user);
+    return user;
   } catch (error) {
     console.error('Error getting user from JWT:', error);
     return null;
