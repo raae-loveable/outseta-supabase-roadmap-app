@@ -1,106 +1,65 @@
+// File: /functions/exchange/index.ts
 
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts';
+// Deploy as a Supabase function with --no-verify-jwt
+// as we are providing an Outseta token, not a Supabase token
+// command: supabase functions deploy exchange --no-verify-jwt
 
-// Define the CORS headers
+import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
+
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
-// Handle CORS preflight requests
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
     console.log("OPTIONS request");
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
+  // Get the Outseta signed JWT from the Authorization header
+  const authHeader = req.headers.get("Authorization");
+  const outsetaJwtAccessToken = authHeader?.split(" ")[1] || "";
+
   try {
-    // Only allow POST requests
-    if (req.method !== 'POST') {
-      throw new Error('Method not allowed');
-    }
-
-    // Get the Outseta token from the request body
-    const { outsetaToken } = await req.json();
-    if (!outsetaToken) {
-      throw new Error('Missing Outseta token');
-    }
-
-    console.log('Received Outseta token for verification');
-
-    try {
-      // Fetch the JSON Web Key (JWK) set
-      const JWKS = jose.createRemoteJWKSet(
-        new URL("https://snippets.outseta.com/.well-known/jwks")
-      );
-
-      // Use the JSON Web Key (JWK) to verify the token
-      const { payload } = await jose.jwtVerify(outsetaToken, JWKS);
-      
-      console.log("JWT is valid");
-
-      // Create a custom JWT payload for Supabase
-      const supabasePayload = {
-        aud: 'authenticated',
-        exp: payload.exp,
-        sub: payload.sub || payload.nameid,
-        email: payload.email,
-        app_metadata: {
-          provider: 'outseta'
-        },
-        user_metadata: {
-          full_name: payload.name,
-          outseta_uid: payload.sub || payload.nameid,
-        },
-        role: 'authenticated'
-      };
-
-      // For signing our own JWT, we need the Supabase JWT secret
-      const JWT_SECRET = Deno.env.get('SUPABASE_JWT_SECRET');
-      if (!JWT_SECRET) {
-        throw new Error('JWT_SECRET not configured for token generation');
-      }
-
-      // Create and sign the JWT for Supabase
-      const supabaseEncodedJwtSecret = new TextEncoder().encode(JWT_SECRET);
-      const jwtAlg = "HS256";
-
-      const supabaseJwt = await new jose.SignJWT(supabasePayload)
-        .setProtectedHeader({ alg: jwtAlg, typ: "JWT" })
-        .setIssuer("supabase")
-        .setIssuedAt()
-        .setExpirationTime(payload.exp || "1h")
-        .sign(supabaseEncodedJwtSecret);
-
-      return new Response(
-        JSON.stringify({ token: supabaseJwt }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          } 
-        }
-      );
-    } catch (error) {
-      console.error("JWT verification error:", error.message, {
-        outsetaToken: outsetaToken.substring(0, 10) + '...',
-      });
-      
-      throw new Error(`Invalid token: ${error.message}`);
-    }
-  } catch (error) {
-    console.error('Error in outseta-auth function:', error);
-    
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 401,
-        headers: { 
-          ...corsHeaders,
-          'Content-Type': 'application/json'
-        } 
-      }
+    const JWKS = jose.createRemoteJWKSet(
+      new URL(`https://${Deno.env.get("OUTSETA_DOMAIN")}/.well-known/jwks`)
     );
+
+    // Use the JSON Web Key (JWK) to verify the token
+    const { payload } = await jose.jwtVerify(outsetaJwtAccessToken, JWKS);
+
+    console.log("JWT is valid");
+
+    // Update the JWT for Supabase and sign with the Supabase secret
+    payload.role = "authenticated";
+
+    const supabaseEncodedJwtSecret = new TextEncoder().encode(
+      Deno.env.get("SUPA_JWT_SECRET")
+    );
+    const jwtAlg = "HS256";
+
+    const supabaseJwt = await new jose.SignJWT(payload)
+      .setProtectedHeader({ alg: jwtAlg, typ: "JWT" })
+      .setIssuer("supabase")
+      .setIssuedAt(payload.iat)
+      .setExpirationTime(payload.exp || "")
+      .sign(supabaseEncodedJwtSecret);
+
+    // Respond with the new Supabase JWT
+    return new Response(JSON.stringify({ supabaseJwt }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
+  } catch (error) {
+    console.error(error.message, {
+      outsetaJwtAccessToken,
+    });
+
+    return new Response(JSON.stringify({ error: "Invalid" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 401,
+    });
   }
 });
