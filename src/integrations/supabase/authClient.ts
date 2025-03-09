@@ -42,9 +42,10 @@ export const exchangeOutsetaToken = async (outsetaToken: string) => {
 // Function to set the Supabase auth session with the exchanged token
 export const setSupabaseSession = async (token: string) => {
   try {
+    // Method 1: Set auth session directly using the JWT
     const { data, error } = await supabaseAuth.auth.setSession({
       access_token: token,
-      refresh_token: token, // Using the same token as refresh token in this case
+      refresh_token: token, // Using the same token as refresh token
     });
     
     if (error) {

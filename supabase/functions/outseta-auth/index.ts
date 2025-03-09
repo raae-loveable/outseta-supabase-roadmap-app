@@ -1,6 +1,7 @@
 
 // Edge function to exchange an Outseta JWT for a Supabase JWT
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
+import * as jose from 'https://deno.land/x/jose@v4.14.4/index.ts';
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -14,12 +15,6 @@ const handleCors = (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 };
-
-// Create Supabase admin client with service role key
-const supabaseAdmin = createClient(
-  Deno.env.get('SUPABASE_URL') || '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-);
 
 // Main function to handle the request
 Deno.serve(async (req) => {
@@ -49,9 +44,10 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Extract user ID and other information
+    // Extract user information from Outseta claims
     const userId = tokenPayload.sub || tokenPayload.nameid;
     const email = tokenPayload.email;
+    const name = tokenPayload.name || '';
     
     if (!userId || !email) {
       return new Response(
@@ -60,70 +56,47 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Check if user exists in Supabase
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    // Service role key and JWT secret from environment
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET') || '';
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     
-    let supabaseToken;
-    
-    // If user doesn't exist, create them
-    if (userError || !userData?.user) {
-      console.log(`User ${userId} not found in Supabase, creating new user`);
-      
-      // Create the user in Supabase auth
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-        email: email,
-        email_confirm: true, // Auto-confirm the email
-        user_metadata: {
-          outseta_id: userId,
-          full_name: tokenPayload.name,
-          first_name: tokenPayload.given_name,
-          last_name: tokenPayload.family_name,
-        },
-        id: userId, // Use the Outseta user ID as the Supabase user ID
-      });
-      
-      if (createError) {
-        console.error('Error creating user:', createError);
-        return new Response(
-          JSON.stringify({ error: `Failed to create user: ${createError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Generate a Supabase JWT for the new user
-      const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email: email,
-      });
-      
-      if (tokenError) {
-        console.error('Error generating token:', tokenError);
-        return new Response(
-          JSON.stringify({ error: `Failed to generate token: ${tokenError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      supabaseToken = tokenData.properties.hashed_token;
-    } else {
-      console.log(`User ${userId} found in Supabase, generating JWT`);
-      
-      // Generate a custom token for the existing user
-      const { data: tokenData, error: tokenError } = await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email: email,
-      });
-      
-      if (tokenError) {
-        console.error('Error generating token:', tokenError);
-        return new Response(
-          JSON.stringify({ error: `Failed to generate token: ${tokenError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      supabaseToken = tokenData.properties.hashed_token;
+    if (!serviceRoleKey || !jwtSecret) {
+      console.error('Missing required environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+    
+    // Construct the Supabase JWT claims
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    const expiryInSeconds = nowInSeconds + 3600; // 1 hour expiry
+    
+    const payload = {
+      aud: 'authenticated',
+      exp: expiryInSeconds,
+      iat: nowInSeconds,
+      iss: 'supabase',
+      sub: userId,
+      email: email,
+      role: 'authenticated',
+      user_metadata: {
+        outseta_id: userId,
+        full_name: name,
+        email: email
+      }
+    };
+    
+    console.log('Creating Supabase JWT with payload:', payload);
+    
+    // Sign the JWT with the Supabase JWT secret
+    const privateKey = new TextEncoder().encode(jwtSecret);
+    
+    // Create the JWT
+    const supabaseToken = await new jose.SignJWT(payload)
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .sign(privateKey);
     
     // Return the Supabase token
     return new Response(
@@ -134,16 +107,13 @@ Deno.serve(async (req) => {
           email: email
         }
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
   } catch (error) {
     console.error('Error processing request:', error);
     return new Response(
-      JSON.stringify({ error: `Internal server error: ${error.message}` }),
+      JSON.stringify({ error: `Internal server error: ${error.message || "Unknown error"}` }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

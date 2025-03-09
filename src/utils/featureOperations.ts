@@ -6,10 +6,7 @@ import { toast } from '@/components/ui/use-toast';
 // Get the appropriate Supabase client based on authentication status
 const getSupabaseClient = () => {
   // Check if we have a valid session in the auth client
-  const session = supabaseAuth.auth.session();
-  
-  // If we have a valid session, use the authenticated client
-  if (session) {
+  if (supabaseAuth.auth.getSession()) {
     console.log("Using authenticated Supabase client");
     return supabaseAuth;
   }
