@@ -45,7 +45,6 @@ export type Database = {
           description: string
           id: string
           status: Database["public"]["Enums"]["feature_status"]
-          status_2: string
           title: string
           updated_at: string
           votes: number
@@ -56,7 +55,6 @@ export type Database = {
           description: string
           id?: string
           status?: Database["public"]["Enums"]["feature_status"]
-          status_2: string
           title: string
           updated_at?: string
           votes?: number
@@ -67,7 +65,6 @@ export type Database = {
           description?: string
           id?: string
           status?: Database["public"]["Enums"]["feature_status"]
-          status_2?: string
           title?: string
           updated_at?: string
           votes?: number

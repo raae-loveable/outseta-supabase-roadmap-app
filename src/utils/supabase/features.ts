@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Feature, FeatureStatus } from '../types';
 
@@ -90,7 +89,6 @@ export const addFeature = async (
       title,
       description,
       status: 'planned' as FeatureStatus, // Correctly using 'planned' as the default status
-      status_2: 'planned', // Adding the required status_2 field
       votes: 1,
       creator_id: userId, // Store the user ID as the creator
     };
@@ -149,14 +147,9 @@ export const updateFeature = async (
   try {
     console.log('Updating feature in Supabase:', { id, updates });
     
-    // If status is updated, also update status_2 to match
-    const updatesWithStatus2 = updates.status
-      ? { ...updates, status_2: updates.status }
-      : updates;
-    
     const { data: feature, error } = await customClient
       .from('features')
-      .update(updatesWithStatus2)
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
