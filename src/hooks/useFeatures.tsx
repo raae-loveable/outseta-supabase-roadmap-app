@@ -73,7 +73,7 @@ export function useFeatures() {
     return newFeature;
   }, []);
 
-  // Update a feature's vote count, allowing users to change their vote
+  // Update a feature's vote count
   const updateVotes = useCallback((id: string, increment: boolean, userId: string) => {
     setFeatures(prev => 
       prev.map(feature => {
@@ -81,42 +81,24 @@ export function useFeatures() {
           const hasVoted = feature.votedBy.has(userId);
           const newVotedBy = new Set(feature.votedBy);
           
-          // User has already voted, allow them to change their vote
+          // User has already voted and is clicking again (toggle the vote off)
           if (hasVoted) {
-            // Remove their vote
             newVotedBy.delete(userId);
             
-            // If they're trying to vote the same way again, just remove their vote
-            if (increment) {
-              toast({
-                title: "Vote Removed",
-                description: "Your vote has been removed from this feature.",
-              });
-              
-              return { 
-                ...feature, 
-                votes: feature.votes - 1, // Decrease vote count
-                votedBy: newVotedBy,
-                updatedAt: new Date()
-              };
-            } else {
-              // They're trying to downvote after upvoting, which we interpret as removing their vote
-              // We already handled this above, just returning the updated feature
-              toast({
-                title: "Vote Removed",
-                description: "Your vote has been removed from this feature.",
-              });
-              
-              return { 
-                ...feature, 
-                votes: feature.votes - 1, // Decrease vote count
-                votedBy: newVotedBy,
-                updatedAt: new Date()
-              };
-            }
+            toast({
+              title: "Vote Removed",
+              description: "Your vote has been removed from this feature.",
+            });
+            
+            return { 
+              ...feature, 
+              votes: feature.votes - 1,
+              votedBy: newVotedBy,
+              updatedAt: new Date()
+            };
           }
           
-          // User hasn't voted yet, add their vote
+          // User hasn't voted yet, so add their vote
           newVotedBy.add(userId);
           
           toast({
@@ -126,7 +108,7 @@ export function useFeatures() {
           
           return { 
             ...feature, 
-            votes: feature.votes + 1, // Only increment since we're only allowing upvotes
+            votes: feature.votes + 1,
             votedBy: newVotedBy,
             updatedAt: new Date()
           };
