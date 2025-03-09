@@ -40,7 +40,9 @@ export const exchangeOutsetaToken = async (outsetaToken: string) => {
 // Function to set the Supabase auth session with the exchanged token
 export const setSupabaseSession = async (token: string) => {
   try {
-    // Method 1: Set auth session directly using the JWT
+    console.log("Setting Supabase session with token:", token ? "Token exists" : "No token");
+    
+    // Set auth session directly using the JWT
     const { data, error } = await supabaseAuth.auth.setSession({
       access_token: token,
       refresh_token: token, // Using the same token as refresh token
@@ -51,7 +53,10 @@ export const setSupabaseSession = async (token: string) => {
       throw error;
     }
     
-    console.log("Supabase session set successfully");
+    // Verify the session was set by checking if we can get the user
+    const { data: userData } = await supabaseAuth.auth.getUser();
+    console.log("Supabase session set successfully, user:", userData?.user?.id);
+    
     return data;
   } catch (error) {
     console.error("Error setting Supabase session:", error);
@@ -62,6 +67,7 @@ export const setSupabaseSession = async (token: string) => {
 // Function to clear the Supabase session on logout
 export const clearSupabaseSession = async () => {
   try {
+    console.log("Clearing Supabase session");
     const { error } = await supabaseAuth.auth.signOut();
     
     if (error) {
