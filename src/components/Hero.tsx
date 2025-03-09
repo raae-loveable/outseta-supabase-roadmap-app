@@ -36,7 +36,7 @@ export function Hero({ className, ...props }: HeroProps) {
   return (
     <section
       className={cn(
-        "min-h-[85vh] flex flex-col items-center justify-center px-4 pt-20",
+        "min-h-[85vh] flex flex-col items-center justify-center px-4 pt-20 relative",
         className
       )}
       {...props}
@@ -86,7 +86,7 @@ export function Hero({ className, ...props }: HeroProps) {
       
       <div
         ref={el => elementsRef.current[4] = el} 
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animated-element animate-delay-400"
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animated-element animate-delay-400 mt-8"
       >
         <div className="w-6 h-10 rounded-full border-2 border-primary/40 flex items-start justify-center p-1">
           <div className="w-1 h-2 bg-primary/60 rounded-full animate-float"></div>
