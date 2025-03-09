@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { FeatureRequestInput } from '@/utils/types';
 import { Lightbulb } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface SubmitFeatureFormProps {
   onSubmit: (input: FeatureRequestInput) => void;
@@ -35,11 +36,13 @@ export function SubmitFeatureForm({ onSubmit, isLoggedIn, className }: SubmitFea
     <section
       id="submit"
       className={cn(
-        "py-24 px-4 bg-gradient-to-b from-purple-50 to-yellow-50",
+        "py-24 px-4",
         className
       )}
     >
       <div className="container mx-auto max-w-3xl">
+        <Separator className="mb-16 opacity-30" />
+        
         <div className="text-center mb-10">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
             <Lightbulb className="w-8 h-8 text-primary" />
