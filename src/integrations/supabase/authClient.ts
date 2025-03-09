@@ -20,9 +20,9 @@ export const exchangeOutsetaToken = async (outsetaToken: string) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_PUBLISHABLE_KEY}`
+        'Authorization': `Bearer ${outsetaToken}`
       },
-      body: JSON.stringify({ outsetaToken })
+      body: JSON.stringify({})
     });
     
     if (!response.ok) {

@@ -1,8 +1,9 @@
-// File: /functions/exchange/index.ts
+
+// File: /functions/outseta-auth/index.ts
 
 // Deploy as a Supabase function with --no-verify-jwt
 // as we are providing an Outseta token, not a Supabase token
-// command: supabase functions deploy exchange --no-verify-jwt
+// command: supabase functions deploy outseta-auth --no-verify-jwt
 
 import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
 
@@ -23,6 +24,7 @@ Deno.serve(async (req) => {
   const outsetaJwtAccessToken = authHeader?.split(" ")[1] || "";
 
   try {
+    // Fetch the JSON Web Key (JWK) set
     const JWKS = jose.createRemoteJWKSet(
       new URL(`https://snippets.outseta.com/.well-known/jwks`)
     );

@@ -9,11 +9,7 @@ export const fetchFeaturesFromSupabase = async (userId?: string) => {
     const features = await getFeatures(userId);
     
     return {
-      features: features.map(feature => ({
-        ...feature,
-        createdAt: new Date(feature.created_at as string),
-        updatedAt: new Date(feature.updated_at as string),
-      })) as Feature[],
+      features: features as Feature[],
     };
   } catch (error) {
     console.error('Error fetching features from Supabase:', error);
@@ -31,11 +27,7 @@ export const addFeatureToSupabase = async (input: FeatureRequestInput, userId: s
     }
     
     return {
-      feature: {
-        ...newFeature,
-        createdAt: new Date(newFeature.created_at as string),
-        updatedAt: new Date(newFeature.updated_at as string),
-      } as Feature,
+      feature: newFeature as Feature,
     };
   } catch (error) {
     console.error('Error adding feature to Supabase:', error);

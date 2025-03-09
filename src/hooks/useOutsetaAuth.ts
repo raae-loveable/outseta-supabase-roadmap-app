@@ -39,12 +39,12 @@ export function useOutsetaAuth() {
               // Exchange the Outseta token for a Supabase token
               const exchangeResult = await exchangeOutsetaToken(outsetaToken);
               
-              if (exchangeResult && exchangeResult.token) {
+              if (exchangeResult && exchangeResult.supabaseJwt) {
                 // Set the Supabase token
-                setSupabaseToken(exchangeResult.token);
+                setSupabaseToken(exchangeResult.supabaseJwt);
                 
                 // Set the Supabase session with the token
-                await setSupabaseSession(exchangeResult.token);
+                await setSupabaseSession(exchangeResult.supabaseJwt);
                 
                 console.log("Token exchange successful");
                 setTokenExchangeError(null);

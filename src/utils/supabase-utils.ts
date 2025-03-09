@@ -97,7 +97,7 @@ export const addFeature = async (
     // Return the newly created feature with the votedBy field
     return {
       ...feature,
-      votedBy: new Set([userId]) as Set<string>, // The user who created the feature has voted for it
+      votedBy: new Set([userId]) as any, // Using type assertion to fix TS error
     };
   } catch (error) {
     console.error('Error in addFeature:', error);
