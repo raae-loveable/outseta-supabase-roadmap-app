@@ -2,7 +2,7 @@
 import React from 'react';
 import { Feature } from '@/utils/types';
 import { cn } from '@/lib/utils';
-import { CheckCircle2, Clock, ThumbsUp } from 'lucide-react';
+import { CheckCircle2, Clock, ThumbsUp, Inbox } from 'lucide-react';
 
 interface FeatureCardProps {
   feature: Feature;
@@ -14,13 +14,19 @@ interface FeatureCardProps {
 export function FeatureCard({ feature, onVote, className, userId }: FeatureCardProps) {
   // Status badge config
   const statusConfig = {
+    'requested': { color: 'bg-blue-100 text-blue-800', icon: Inbox },
     'planned': { color: 'bg-blue-100 text-blue-800', icon: Clock },
     'in-progress': { color: 'bg-amber-100 text-amber-800', icon: Clock },
     'completed': { color: 'bg-green-100 text-green-800', icon: CheckCircle2 },
   };
   
-  const statusColor = statusConfig[feature.status].color;
-  const StatusIcon = statusConfig[feature.status].icon;
+  // Default config in case the status is not found in the map
+  const defaultStatusConfig = { color: 'bg-gray-100 text-gray-800', icon: Clock };
+  
+  // Get status config or use default if not found
+  const config = statusConfig[feature.status] || defaultStatusConfig;
+  const statusColor = config.color;
+  const StatusIcon = config.icon;
   
   // Check if the current user has voted on this feature
   const hasVoted = userId && feature.votedBy && feature.votedBy.has(userId);
