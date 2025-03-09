@@ -2,12 +2,13 @@
 import { useState, useEffect } from 'react';
 import { OutsetaUser } from '@/utils/types';
 import { getAccessToken } from '@/utils/outseta';
-import { exchangeOutsetaToken, setSupabaseSession, clearSupabaseSession } from '@/integrations/supabase/authClient';
+import { exchangeOutsetaToken, createSupabaseClientWithToken, clearSupabaseSession } from '@/integrations/supabase/authClient';
 
 export function useOutsetaAuth() {
   const [user, setUser] = useState<OutsetaUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [supabaseToken, setSupabaseToken] = useState<string | null>(null);
+  const [supabaseClient, setSupabaseClient] = useState<any>(null);
   const [tokenExchangeError, setTokenExchangeError] = useState<string | null>(null);
 
   // Function to directly get the current auth state and exchange tokens
@@ -41,12 +42,14 @@ export function useOutsetaAuth() {
               
               if (exchangeResult && exchangeResult.supabaseJwt) {
                 // Set the Supabase token
-                setSupabaseToken(exchangeResult.supabaseJwt);
+                const token = exchangeResult.supabaseJwt;
+                setSupabaseToken(token);
                 
-                // Set the Supabase session with the token
-                await setSupabaseSession(exchangeResult.supabaseJwt);
+                // Create a new Supabase client with the token
+                const client = createSupabaseClientWithToken(token);
+                setSupabaseClient(client);
                 
-                console.log("Token exchange successful");
+                console.log("Token exchange successful and Supabase client created");
                 setTokenExchangeError(null);
               } else {
                 console.error("Token exchange failed: No token returned");
@@ -64,6 +67,7 @@ export function useOutsetaAuth() {
           // User is not logged in
           setUser(null);
           setSupabaseToken(null);
+          setSupabaseClient(null);
           
           // Clear the Supabase session
           await clearSupabaseSession();
@@ -74,6 +78,7 @@ export function useOutsetaAuth() {
         console.error("Error refreshing auth state:", error);
         setUser(null);
         setSupabaseToken(null);
+        setSupabaseClient(null);
         setTokenExchangeError(`Error refreshing auth state: ${error.message}`);
       }
       
@@ -100,11 +105,12 @@ export function useOutsetaAuth() {
   }, []);
 
   return {
-    isLoggedIn: !!user, // Simplify - user exists means logged in
+    isLoggedIn: !!user, 
     user,
     loading,
     refreshAuthState,
     supabaseToken,
+    supabaseClient,
     tokenExchangeError
   };
 }

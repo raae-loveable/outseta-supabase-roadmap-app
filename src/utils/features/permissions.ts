@@ -2,9 +2,9 @@
 import { getUserProfile } from '../supabase';
 
 // Helper function to check if a user can perform an action
-export const canPerformAction = async () => {
+export const canPerformAction = async (customClient?: any) => {
   try {
-    const user = await getUserProfile();
+    const user = await getUserProfile(customClient);
     
     if (!user) {
       console.log('No user found, action not permitted');

@@ -11,6 +11,21 @@ export const supabaseAuth = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY
 );
 
+// Function to create a Supabase client with a custom JWT token
+export const createSupabaseClientWithToken = (token: string) => {
+  console.log("Creating Supabase client with custom JWT token");
+  
+  return createClient<Database>(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
+    {
+      global: {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    }
+  );
+};
+
 // Function to exchange an Outseta JWT for a Supabase JWT
 export const exchangeOutsetaToken = async (outsetaToken: string) => {
   try {
@@ -37,34 +52,8 @@ export const exchangeOutsetaToken = async (outsetaToken: string) => {
   }
 };
 
-// Function to set the Supabase auth session with the exchanged token
-export const setSupabaseSession = async (token: string) => {
-  try {
-    console.log("Setting Supabase session with token:", token ? "Token exists" : "No token");
-    
-    // Set auth session directly using the JWT
-    const { data, error } = await supabaseAuth.auth.setSession({
-      access_token: token,
-      refresh_token: token, // Using the same token as refresh token
-    });
-    
-    if (error) {
-      console.error("Error setting Supabase session:", error);
-      throw error;
-    }
-    
-    // Verify the session was set by checking if we can get the user
-    const { data: userData } = await supabaseAuth.auth.getUser();
-    console.log("Supabase session set successfully, user:", userData?.user?.id);
-    
-    return data;
-  } catch (error) {
-    console.error("Error setting Supabase session:", error);
-    throw error;
-  }
-};
-
-// Function to clear the Supabase session on logout
+// We're replacing the setSupabaseSession function with the approach
+// of creating a new client with the token in the authorization header
 export const clearSupabaseSession = async () => {
   try {
     console.log("Clearing Supabase session");
