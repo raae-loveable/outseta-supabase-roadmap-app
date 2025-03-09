@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useMemo } from 'react';
 import { Feature, FeatureRequestInput, FeatureStatus } from '../utils/types';
 import { initialFeatures } from '../utils/data';
@@ -80,50 +81,55 @@ export function useFeatures() {
           const hasVoted = feature.votedBy.has(userId);
           const newVotedBy = new Set(feature.votedBy);
           
-          // User has already voted
+          // User has already voted, allow them to change their vote
           if (hasVoted) {
             // Remove their vote
             newVotedBy.delete(userId);
             
-            toast({
-              title: "Vote Removed",
-              description: "Your vote has been removed from this feature.",
-            });
-            
-            // Decrement vote count when removing a vote
-            return { 
-              ...feature, 
-              votes: feature.votes - 1,
-              votedBy: newVotedBy,
-              updatedAt: new Date()
-            };
+            // If they're trying to vote the same way again, just remove their vote
+            if (increment) {
+              toast({
+                title: "Vote Removed",
+                description: "Your vote has been removed from this feature.",
+              });
+              
+              return { 
+                ...feature, 
+                votes: feature.votes - 1, // Decrease vote count
+                votedBy: newVotedBy,
+                updatedAt: new Date()
+              };
+            } else {
+              // They're trying to downvote after upvoting, which we interpret as removing their vote
+              // We already handled this above, just returning the updated feature
+              toast({
+                title: "Vote Removed",
+                description: "Your vote has been removed from this feature.",
+              });
+              
+              return { 
+                ...feature, 
+                votes: feature.votes - 1, // Decrease vote count
+                votedBy: newVotedBy,
+                updatedAt: new Date()
+              };
+            }
           }
           
           // User hasn't voted yet, add their vote
-          if (increment) {
-            newVotedBy.add(userId);
-            
-            toast({
-              title: "Vote Added",
-              description: "Your upvote has been recorded for this feature.",
-            });
-            
-            return { 
-              ...feature, 
-              votes: feature.votes + 1,
-              votedBy: newVotedBy,
-              updatedAt: new Date()
-            };
-          } else {
-            // User clicked downvote but hasn't voted yet
-            // In our current UI, downvote is only for removing votes
-            toast({
-              title: "No Action",
-              description: "You haven't voted for this feature yet.",
-            });
-            
-            return feature;
-          }
+          newVotedBy.add(userId);
+          
+          toast({
+            title: "Vote Recorded",
+            description: "Your vote has been recorded for this feature.",
+          });
+          
+          return { 
+            ...feature, 
+            votes: feature.votes + 1, // Only increment since we're only allowing upvotes
+            votedBy: newVotedBy,
+            updatedAt: new Date()
+          };
         }
         return feature;
       })
