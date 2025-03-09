@@ -1,34 +1,9 @@
+import { supabase } from '@/lib/supabaseClient';
 
-import { supabase } from '@/integrations/supabase/client';
-
-// Function to increment a vote count
-export const incrementVoteCount = async (featureId: string) => {
-  try {
-    const { data, error } = await supabase.rpc(
-      'increment',
-      { row_id: featureId, x: 1 } as any
-    );
-    
-    if (error) throw error;
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error incrementing vote count:', error);
-    return { success: false, error };
-  }
+export const incrementVotes = (featureId: string) => {
+  return supabase.rpc("increment", { feature_id: featureId } as any);
 };
 
-// Function to decrement a vote count
-export const decrementVoteCount = async (featureId: string) => {
-  try {
-    const { data, error } = await supabase.rpc(
-      'decrement',
-      { row_id: featureId, x: 1 } as any
-    );
-    
-    if (error) throw error;
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error decrementing vote count:', error);
-    return { success: false, error };
-  }
+export const decrementVotes = (featureId: string) => {
+  return supabase.rpc("decrement", { feature_id: featureId } as any);
 };

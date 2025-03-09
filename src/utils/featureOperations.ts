@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { supabaseAuth } from '@/integrations/supabase/authClient';
 import { Feature, FeatureStatus, FeatureRequestInput } from '@/utils/types';
@@ -161,3 +160,11 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
     return { action: null, error };
   }
 };
+
+export function upvoteFeature(featureId: string): Promise<any> {
+  return supabase.rpc("increment", { feature_id: featureId } as any);
+}
+
+export function downvoteFeature(featureId: string): Promise<any> {
+  return supabase.rpc("decrement", { feature_id: featureId } as any);
+}
