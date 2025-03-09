@@ -41,7 +41,7 @@ export const voteForFeature = async (
       // Increment the votes count in the features table
       const { error: updateError } = await supabase.rpc('increment_votes', { 
         feature_id: featureId 
-      } as { feature_id: string });
+      });
       
       if (updateError) {
         console.error('Error incrementing votes:', updateError);
@@ -65,7 +65,7 @@ export const voteForFeature = async (
       // Decrement the votes count in the features table
       const { error: updateError } = await supabase.rpc('decrement_votes', { 
         feature_id: featureId 
-      } as { feature_id: string });
+      });
       
       if (updateError) {
         console.error('Error decrementing votes:', updateError);

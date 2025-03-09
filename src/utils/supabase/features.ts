@@ -32,24 +32,35 @@ export const getFeatures = async (userId?: string) => {
       const userVotedFeatureIds = new Set(votes?.map(vote => vote.feature_id) || []);
 
       // Enhance the features with votedBy information
-      features = features?.map(feature => ({
+      const typedFeatures = features?.map(feature => ({
         ...feature,
-        votedBy: userVotedFeatureIds.has(feature.id) ? new Set([userId]) : new Set(),
-        createdAt: new Date(feature.created_at as string),
-        updatedAt: new Date(feature.updated_at as string),
-      }));
+        id: feature.id,
+        title: feature.title,
+        description: feature.description,
+        status: feature.status as FeatureStatus,
+        votes: feature.votes,
+        votedBy: userVotedFeatureIds.has(feature.id) ? new Set([userId]) : new Set<string>(),
+        createdAt: new Date(feature.created_at),
+        updatedAt: new Date(feature.updated_at),
+      })) as Feature[];
+
+      return typedFeatures || [];
     } else {
       // If no userId, initialize empty votedBy sets
-      features = features?.map(feature => ({
+      const typedFeatures = features?.map(feature => ({
         ...feature,
-        votedBy: new Set(),
-        createdAt: new Date(feature.created_at as string),
-        updatedAt: new Date(feature.updated_at as string),
-      }));
-    }
+        id: feature.id,
+        title: feature.title,
+        description: feature.description,
+        status: feature.status as FeatureStatus,
+        votes: feature.votes,
+        votedBy: new Set<string>(),
+        createdAt: new Date(feature.created_at),
+        updatedAt: new Date(feature.updated_at),
+      })) as Feature[];
 
-    // Type assertion to ensure features conform to the Feature type
-    return (features || []) as Feature[];
+      return typedFeatures || [];
+    }
   } catch (error) {
     console.error('Error in getFeatures:', error);
     throw error;
@@ -101,9 +112,14 @@ export const addFeature = async (
     // Return the newly created feature with the votedBy field
     return {
       ...feature,
+      id: feature.id,
+      title: feature.title,
+      description: feature.description,
+      status: feature.status as FeatureStatus,
+      votes: feature.votes,
       votedBy: new Set([userId]) as Set<string>, // The user who created the feature has voted for it
-      createdAt: new Date(feature.created_at as string),
-      updatedAt: new Date(feature.updated_at as string),
+      createdAt: new Date(feature.created_at),
+      updatedAt: new Date(feature.updated_at),
     } as Feature;
   } catch (error) {
     console.error('Error in addFeature:', error);
@@ -133,9 +149,14 @@ export const updateFeature = async (
 
     return {
       ...feature,
-      createdAt: new Date(feature.created_at as string),
-      updatedAt: new Date(feature.updated_at as string),
-      votedBy: new Set(), // Placeholder - we don't have vote info here
+      id: feature.id,
+      title: feature.title,
+      description: feature.description,
+      status: feature.status as FeatureStatus,
+      votes: feature.votes,
+      votedBy: new Set<string>(), // Placeholder - we don't have vote info here
+      createdAt: new Date(feature.created_at),
+      updatedAt: new Date(feature.updated_at),
     } as Feature;
   } catch (error) {
     console.error('Error in updateFeature:', error);
