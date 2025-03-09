@@ -39,7 +39,8 @@ export const voteForFeature = async (
       }
 
       // Increment the votes count in the features table
-      const { error: updateError } = await supabase.rpc('increment_votes', { 
+      // Use explicit type parameter for the RPC function
+      const { error: updateError } = await supabase.rpc<{ feature_id: string }>('increment_votes', { 
         feature_id: featureId 
       });
       
@@ -63,7 +64,8 @@ export const voteForFeature = async (
       }
 
       // Decrement the votes count in the features table
-      const { error: updateError } = await supabase.rpc('decrement_votes', { 
+      // Use explicit type parameter for the RPC function
+      const { error: updateError } = await supabase.rpc<{ feature_id: string }>('decrement_votes', { 
         feature_id: featureId 
       });
       
