@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
@@ -9,7 +8,7 @@ import { useOutsetaAuth } from '@/hooks/useOutsetaAuth';
 import { useSupabaseFeatures } from '@/hooks/useSupabaseFeatures';
 import { toast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { InfoCircledIcon } from '@radix-ui/react-icons';
+import { AlertCircle } from 'lucide-react';
 
 const Index = () => {
   const {
@@ -24,17 +23,14 @@ const Index = () => {
     setSortBy,
   } = useSupabaseFeatures();
   
-  // Use our Outseta auth hook with token exchange
   const { user, loading: authLoading, tokenExchangeError, supabaseToken } = useOutsetaAuth();
   const isLoggedIn = !!user;
 
-  // Register Outseta events when component mounts
   useEffect(() => {
     registerOutsetaEvents();
   }, []);
 
   useEffect(() => {
-    // Observer for the animation of elements as they appear in the viewport
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -49,17 +45,14 @@ const Index = () => {
       }
     );
 
-    // Select all elements with the 'animated-element' class
     const animatedElements = document.querySelectorAll('.animated-element');
     animatedElements.forEach((el) => observer.observe(el));
 
-    // Cleanup
     return () => {
       animatedElements.forEach((el) => observer.unobserve(el));
     };
   }, []);
 
-  // Display a toast when token exchange status changes
   useEffect(() => {
     if (user && supabaseToken) {
       toast({
@@ -85,7 +78,6 @@ const Index = () => {
       return;
     }
     
-    // Check if Supabase token is available
     if (!supabaseToken) {
       toast({
         title: "Authentication incomplete",
@@ -99,7 +91,6 @@ const Index = () => {
   };
 
   const handleVote = async (featureId: string, increment: boolean) => {
-    // Check if auth state is still loading
     if (authLoading) {
       toast({
         title: "Please wait",
@@ -108,7 +99,6 @@ const Index = () => {
       return;
     }
     
-    // Check authentication directly with user object
     if (!user) {
       toast({
         title: "Authentication required",
@@ -118,7 +108,6 @@ const Index = () => {
       return;
     }
     
-    // Check if Supabase token is available
     if (!supabaseToken) {
       toast({
         title: "Authentication incomplete",
@@ -128,7 +117,6 @@ const Index = () => {
       return;
     }
     
-    // User exists and has Supabase token, proceed with vote
     console.log("Voting with user ID:", user.uid);
     updateVotes(featureId, increment);
   };
@@ -143,7 +131,7 @@ const Index = () => {
         {tokenExchangeError && isLoggedIn && (
           <div className="container mx-auto mt-4 px-4">
             <Alert variant="destructive">
-              <InfoCircledIcon className="h-4 w-4" />
+              <AlertCircle className="h-4 w-4" />
               <AlertTitle>Authentication Error</AlertTitle>
               <AlertDescription>
                 There was an error connecting your Outseta account to Supabase: {tokenExchangeError}

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { supabaseAuth } from '@/integrations/supabase/authClient';
 import { Feature, FeatureStatus, FeatureRequestInput } from '@/utils/types';
@@ -126,10 +127,10 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       if (deleteError) throw deleteError;
       
       // Decrement the votes count in features table
-      // Use explicit type assertion to bypass TypeScript error
+      // Fix the type assertion
       const { error: updateError } = await client.rpc(
         'decrement', 
-        { x: 1, row_id: id } as unknown as Record<string, unknown>
+        { x: 1, row_id: id }
       );
       
       if (updateError) throw updateError;
@@ -147,10 +148,10 @@ export const updateFeatureVotes = async (id: string, userId: string, increment: 
       if (insertError) throw insertError;
       
       // Increment the votes count in features table
-      // Use explicit type assertion to bypass TypeScript error
+      // Fix the type assertion
       const { error: updateError } = await client.rpc(
         'increment', 
-        { x: 1, row_id: id } as unknown as Record<string, unknown>
+        { x: 1, row_id: id }
       );
       
       if (updateError) throw updateError;
