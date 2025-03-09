@@ -25,6 +25,9 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
   // Check if the current user has voted on this feature
   const hasVoted = userId ? feature.votedBy.has(userId) : false;
   
+  // Debug: Convert Set to Array for display
+  const votedByArray = Array.from(feature.votedBy);
+  
   return (
     <div 
       className={cn(
@@ -41,6 +44,13 @@ export function FeatureCard({ feature, onVote, className, userId }: FeatureCardP
       </div>
       
       <p className="text-sm text-foreground/80 mb-6">{feature.description}</p>
+      
+      {/* Debug information */}
+      <div className="text-xs text-red-500 mb-2 p-2 bg-red-100 rounded">
+        <div>User ID: {userId || 'Not logged in'}</div>
+        <div>Has Voted: {hasVoted ? 'Yes' : 'No'}</div>
+        <div>Voted By: {votedByArray.length ? votedByArray.join(', ') : 'No votes'}</div>
+      </div>
       
       <div className="mt-auto flex items-center justify-between pt-3 border-t border-border">
         <div className="flex items-center gap-3">
