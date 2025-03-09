@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Feature, FeatureStatus } from '../types';
 
@@ -88,7 +89,7 @@ export const addFeature = async (
     const newFeature = {
       title,
       description,
-      status: 'planned' as FeatureStatus, // Correctly using 'planned' as the default status
+      status: 'requested' as FeatureStatus, // Using 'requested' as the default status
       votes: 1,
       creator_id: userId, // Store the user ID as the creator
     };
