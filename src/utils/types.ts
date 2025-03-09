@@ -10,6 +10,7 @@ export interface Feature {
   votedBy: Set<string>; // Track which users have voted
   createdAt: Date;
   updatedAt: Date;
+  creator_id?: string; // Add creator ID field
 }
 
 export interface FeatureRequestInput {

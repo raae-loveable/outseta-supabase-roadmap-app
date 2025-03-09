@@ -91,6 +91,7 @@ export const addFeature = async (
       description,
       status: 'requested' as FeatureStatus,
       votes: 1,
+      creator_id: userId, // Store the user ID as the creator
     };
 
     const { data: feature, error } = await customClient
@@ -127,6 +128,7 @@ export const addFeature = async (
       description: feature.description,
       status: feature.status as FeatureStatus,
       votes: feature.votes,
+      creator_id: userId, // Include the creator ID in the returned feature
       votedBy: new Set([userId]) as Set<string>, // The user who created the feature has voted for it
       createdAt: new Date(feature.created_at),
       updatedAt: new Date(feature.updated_at),

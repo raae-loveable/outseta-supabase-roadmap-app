@@ -48,6 +48,11 @@ export function SubmitFeatureForm({ onSubmit, isLoggedIn, className }: SubmitFea
           <p className="text-foreground/80 max-w-xl mx-auto">
             Have a feature idea that would make our product better? 
             Let us know, and the community will help us prioritize it.
+            {!isLoggedIn && (
+              <span className="block mt-2 text-primary font-medium">
+                Please sign in to submit a feature request.
+              </span>
+            )}
           </p>
         </div>
         
@@ -68,6 +73,7 @@ export function SubmitFeatureForm({ onSubmit, isLoggedIn, className }: SubmitFea
               className="w-full px-4 py-3 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
               required
               maxLength={100}
+              disabled={!isLoggedIn}
             />
           </div>
           
@@ -83,16 +89,17 @@ export function SubmitFeatureForm({ onSubmit, isLoggedIn, className }: SubmitFea
               className="w-full px-4 py-3 rounded-lg border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all min-h-[120px]"
               required
               maxLength={500}
+              disabled={!isLoggedIn}
             />
           </div>
           
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={isSubmitting || !title.trim() || !description.trim()}
+              disabled={isSubmitting || !title.trim() || !description.trim() || !isLoggedIn}
               className={cn(
                 "px-6 py-3 rounded-lg bg-primary text-white font-medium transition-all",
-                (isSubmitting || !title.trim() || !description.trim())
+                (isSubmitting || !title.trim() || !description.trim() || !isLoggedIn)
                   ? "opacity-70 cursor-not-allowed"
                   : "hover:opacity-90"
               )}
