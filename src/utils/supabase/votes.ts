@@ -39,10 +39,22 @@ export const voteForFeature = async (
       }
 
       // Increment the votes count in the features table
-      // Use direct update for vote count rather than RPC
+      const { data: feature, error: getError } = await supabase
+        .from('features')
+        .select('votes')
+        .eq('id', featureId)
+        .single();
+      
+      if (getError) {
+        console.error('Error getting feature votes:', getError);
+        throw getError;
+      }
+      
+      const newVoteCount = (feature.votes || 0) + 1;
+      
       const { error: updateError } = await supabase
         .from('features')
-        .update({ votes: supabase.rpc('increment', { votes: 1 }) })
+        .update({ votes: newVoteCount })
         .eq('id', featureId);
       
       if (updateError) {
@@ -65,10 +77,22 @@ export const voteForFeature = async (
       }
 
       // Decrement the votes count in the features table
-      // Use direct update for vote count rather than RPC
+      const { data: feature, error: getError } = await supabase
+        .from('features')
+        .select('votes')
+        .eq('id', featureId)
+        .single();
+      
+      if (getError) {
+        console.error('Error getting feature votes:', getError);
+        throw getError;
+      }
+      
+      const newVoteCount = Math.max((feature.votes || 0) - 1, 0); // Ensure we don't go below zero
+      
       const { error: updateError } = await supabase
         .from('features')
-        .update({ votes: supabase.rpc('decrement', { votes: 1 }) })
+        .update({ votes: newVoteCount })
         .eq('id', featureId);
       
       if (updateError) {
